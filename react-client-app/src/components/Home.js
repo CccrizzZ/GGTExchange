@@ -12,8 +12,10 @@ import {
 
 } from 'react-bootstrap'
 import Web3 from 'web3'
-import ggicon1 from '../asset/ggicon1.png'
 import detectEthereumProvider from '@metamask/detect-provider'
+import UserPage from './UserPage'
+import DevPage from './DevPage'
+import ggicon1 from '../asset/ggicon1.png'
 
 
 export default class Home extends Component {
@@ -33,6 +35,8 @@ export default class Home extends Component {
 
     // connect to the blockchain
     Init = async () => {
+
+        // create 
         console.log("Connecting to metamask")
         const provider = await detectEthereumProvider()
 
@@ -51,12 +55,15 @@ export default class Home extends Component {
     }
 
 
+    RenderMarketListing = async () => {
+
+    }
 
 
     render() {
         this.Init()
         return (
-            <div>
+            <div style={{ backgroundColor: "#0d1117", height: "100vh", color: "#fff" }}>
                 {/* navbar */}
                 <Navbar bg="dark" variant="dark">
                     <Container>
@@ -66,8 +73,8 @@ export default class Home extends Component {
 
 
                 {/* marketplace */}
-                
-
+                <h1>Market place</h1>
+                {this.state.isUser ?  <UserPage /> : <DevPage /> }
 
             </div>
         )

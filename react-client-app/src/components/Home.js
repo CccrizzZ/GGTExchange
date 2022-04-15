@@ -7,6 +7,8 @@ import {
     FormControl, 
     Alert, 
     Spinner, 
+    Row,
+    Col,
     Navbar,
     Container
 
@@ -16,6 +18,7 @@ import detectEthereumProvider from '@metamask/detect-provider'
 import UserPage from './UserPage'
 import DevPage from './DevPage'
 import ggicon1 from '../asset/ggicon1.png'
+import './Home.css'
 
 
 export default class Home extends Component {
@@ -27,11 +30,19 @@ export default class Home extends Component {
         this.state = {
             isUser: true,
             ConnectedWalletAddr: "",
-            TargetContract: "",
+            TargetContract: ""
             
         }
 
     }
+    
+    async componentDidMount(){
+
+        // look for metamask
+        await this.Init()
+    }
+
+
 
 
     // connect to the blockchain
@@ -51,31 +62,51 @@ export default class Home extends Component {
                 ConnectedWalletAddr: provider.selectedAddress
             })
 
+        }else {
+            console.log('MetaMask must be installed to run this DApp.')
+            return false
         }
 
 
 
     }
 
-
-    RenderMarketListing = async () => {
-
+    // pull listing from server
+    GetMarketListing = () => {
 
     }
 
 
     // renders single card
-    RenderCard = async (price, title, genre) => {
+    RenderCards = () => {
         return(
-            <Card></Card>
+            <Card style={{ }}>
+                <Card.Img variant="top" src="http://media.steampowered.com/apps/csgo/blog/images/fb_image.png?v=6" />
+                <Card.Body style={{backgroundColor: '#343a40'}}>
+                    <Card.Title>Example Game</Card.Title>
+                    <Card.Text>
+                        <hr/>
+                        Description: A game about snake eating each other
+                        <hr/>
+                        Publisher: {this.state.ConnectedWalletAddr}
+                        <hr/>
+                        Price: 5 Dev
+
+                    </Card.Text>
+                    <Button variant="primary">Purchase</Button>
+                </Card.Body>
+            </Card>
         )
     }
 
 
+
+
+
     render() {
-        this.Init()
         return (
-            <div style={{ backgroundColor: "#0d1117", height: "100vh", color: "#fff" }}>
+            <div style={{ display: "block", backgroundColor: "#0d1117", height: "auto", color: "#fff" }}>
+                
                 {/* navbar */}
                 <Navbar bg="dark" variant="dark">
                     <Container>
@@ -84,87 +115,19 @@ export default class Home extends Component {
                 </Navbar>
 
 
-                {/* marketplace */}
-                <h1>Connected wallet: {this.state.ConnectedWalletAddr}</h1>
+                {/* wallet connection button */}
+                <Button style={{ fontSize: "16px", marginTop: "40px", marginBottom: "40px" }} onClick={this.Init}>Connected Wallet: {this.state.ConnectedWalletAddr}</Button>
 
-                <div style={{display: 'grid', columnGap: "5px"}}>
-                    <Card style={{ width: '18rem' }}>
-                        <Card.Img variant="top" src="holder.js/100px180" />
-                        <Card.Body>
-                            <Card.Title>Card Title</Card.Title>
-                            <Card.Text>
-                            Some quick example text to build on the card title and make up the bulk of
-                            the card's content.
-                            </Card.Text>
-                            <Button variant="primary">Go somewhere</Button>
-                        </Card.Body>
-                    </Card>
-                    <Card style={{ width: '18rem' }}>
-                        <Card.Img variant="top" src="holder.js/100px180" />
-                        <Card.Body>
-                            <Card.Title>Card Title</Card.Title>
-                            <Card.Text>
-                            Some quick example text to build on the card title and make up the bulk of
-                            the card's content.
-                            </Card.Text>
-                            <Button variant="primary">Go somewhere</Button>
-                        </Card.Body>
-                    </Card>
-                    <Card style={{ width: '18rem' }}>
-                        <Card.Img variant="top" src="holder.js/100px180" />
-                        <Card.Body>
-                            <Card.Title>Card Title</Card.Title>
-                            <Card.Text>
-                            Some quick example text to build on the card title and make up the bulk of
-                            the card's content.
-                            </Card.Text>
-                            <Button variant="primary">Go somewhere</Button>
-                        </Card.Body>
-                    </Card>
-                    <Card style={{ width: '18rem' }}>
-                        <Card.Img variant="top" src="holder.js/100px180" />
-                        <Card.Body>
-                            <Card.Title>Card Title</Card.Title>
-                            <Card.Text>
-                            Some quick example text to build on the card title and make up the bulk of
-                            the card's content.
-                            </Card.Text>
-                            <Button variant="primary">Go somewhere</Button>
-                        </Card.Body>
-                    </Card>
-                    <Card style={{ width: '18rem' }}>
-                        <Card.Img variant="top" src="holder.js/100px180" />
-                        <Card.Body>
-                            <Card.Title>Card Title</Card.Title>
-                            <Card.Text>
-                            Some quick example text to build on the card title and make up the bulk of
-                            the card's content.
-                            </Card.Text>
-                            <Button variant="primary">Go somewhere</Button>
-                        </Card.Body>
-                    </Card>
-                    <Card style={{ width: '18rem' }}>
-                        <Card.Img variant="top" src="holder.js/100px180" />
-                        <Card.Body>
-                            <Card.Title>Card Title</Card.Title>
-                            <Card.Text>
-                            Some quick example text to build on the card title and make up the bulk of
-                            the card's content.
-                            </Card.Text>
-                            <Button variant="primary">Go somewhere</Button>
-                        </Card.Body>
-                    </Card>
-                    <Card style={{ width: '18rem' }}>
-                        <Card.Img variant="top" src="holder.js/100px180" />
-                        <Card.Body>
-                            <Card.Title>Card Title</Card.Title>
-                            <Card.Text>
-                            Some quick example text to build on the card title and make up the bulk of
-                            the card's content.
-                            </Card.Text>
-                            <Button variant="primary">Go somewhere</Button>
-                        </Card.Body>
-                    </Card>
+
+                {/* marketplace */}
+                <div id="modulebox">
+                    <h2>Marketplace</h2>
+                    <hr/>
+                    {this.RenderCards()}
+                    {this.RenderCards()}
+                    {this.RenderCards()}
+                    {this.RenderCards()}
+
                 </div>
 
             </div>

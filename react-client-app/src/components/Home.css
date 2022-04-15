@@ -1,0 +1,11 @@
+#modulebox {
+    display: grid; 
+    gap: 40px;
+    border: 5px solid #343a40;
+    border-radius: 25px;
+    width: 80%;
+    min-width: 1000px; 
+    margin: auto;
+    padding: 20px; 
+    justify-content: center
+}

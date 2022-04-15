@@ -12,11 +12,12 @@ contract GGTimeEx is ERC721 {
     // owner address
     address private owner;
 
+
     // map of all users
-    mapping(address => Role) AllUsers;
+    mapping(address => Roles) AllUsers;
 
     // 3 different roles
-    enum Role {
+    enum Roles {
         Player,
         Developer,
         Admin
@@ -27,24 +28,24 @@ contract GGTimeEx is ERC721 {
     constructor() ERC721("GGTimeToken", "GGTT") {
         // set owner and set role to admin
         owner = msg.sender;
-        AllUsers[msg.sender] = Role.Admin;
+        AllUsers[msg.sender] = Roles.Admin;
 
     }
 
 
     // modifier
     modifier OnlyAdmin {
-        require(AllUsers[msg.sender] == Role.Admin, "Only Admin Can Call!");
+        require(AllUsers[msg.sender] == Roles.Admin, "Only Admin Can Call!");
         _;
     }
 
     modifier OnlyPlayer {
-        require(AllUsers[msg.sender] == Role.Admin, "Only Player Can Call!");
+        require(AllUsers[msg.sender] == Roles.Admin, "Only Player Can Call!");
         _;
     }
 
     modifier OnlyDeveloper {
-        require(AllUsers[msg.sender] == Role.Admin, "Only Developer Can Call!");
+        require(AllUsers[msg.sender] == Roles.Admin, "Only Developer Can Call!");
         _;
     }
 
@@ -53,16 +54,25 @@ contract GGTimeEx is ERC721 {
 
     // functions
     // set to certain role
-    function SetRole(address user, Role role) OnlyAdmin public {
+    function SetRole(address user, Roles role) OnlyAdmin public {
         AllUsers[user] = role;
     }
 
 
     // set caller role to player
     function SetMeToPlayer() public {
-        AllUsers[msg.sender] = Role.Player;
+        AllUsers[msg.sender] = Roles.Player;
     }
 
 
+    // check role for caller
+    function GetMyRole() public view returns (Roles) {
+        return AllUsers[msg.sender];
+    }
+
+
+    function MintForNewGame(string memory name ) OnlyAdmin public {
+
+    }
 
 }

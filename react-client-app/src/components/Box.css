@@ -1,6 +1,5 @@
-#modulebox {
-    display: grid; 
-    gap: 40px;
+#modulebox 
+{
     border: 5px solid #343a40;
     border-radius: 25px;
     width: 80%;
@@ -8,4 +7,12 @@
     margin: auto;
     padding: 20px; 
     justify-content: center
+}
+
+#griddisplay
+{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 50px;
+    grid-auto-rows: minmax(100px, auto);
 }

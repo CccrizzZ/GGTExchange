@@ -1,24 +1,21 @@
 import React, { Component } from 'react'
 import { 
     Button, 
-    Card, 
     ListGroup, 
-    InputGroup, 
-    FormControl, 
-    Alert, 
-    Spinner, 
-    Row,
-    Col,
+    Card,
     Navbar,
-    Container
-
+    Container,
+    ButtonGroup,
+    OverlayTrigger,
+    Tooltip
 } from 'react-bootstrap'
 import Web3 from 'web3'
 import detectEthereumProvider from '@metamask/detect-provider'
-import UserPage from './UserPage'
-import DevPage from './DevPage'
+import Store from './Store'
+import UserLibrary from './UserLibrary'
+import P2PMarketplace from './P2PMarketplace'
 import ggicon1 from '../asset/ggicon1.png'
-import './Home.css'
+import './Box.css'
 
 
 export default class Home extends Component {
@@ -28,10 +25,11 @@ export default class Home extends Component {
         super(props)
 
         this.state = {
-            isUser: true,
             ConnectedWalletAddr: "",
-            TargetContract: ""
-            
+            UserRole: 'player',
+            TargetContract: "",
+            ActivePage: 'store',
+            APIKey: ''
         }
 
     }
@@ -56,14 +54,22 @@ export default class Home extends Component {
         if (provider) {
             window.web3 = new Web3(provider)
             // let contract = new window.web3.eth.Contract(ContractABI, this.state.ContractAddr)
-
+            
+            // store wallet address
             console.log(provider.selectedAddress)
             this.setState({ 
                 ConnectedWalletAddr: provider.selectedAddress
             })
 
+            // determine user role from smart contract
+            this.setState({ 
+                Role: "player"
+            })
+
+
+
         }else {
-            console.log('MetaMask must be installed to run this DApp.')
+            alert('MetaMask must be installed to run this DApp.')
             return false
         }
 
@@ -71,36 +77,44 @@ export default class Home extends Component {
 
     }
 
-    // pull listing from server
-    GetMarketListing = () => {
+
+
+
+    // render app according to current page in state
+    RenderHome = () => {
+
+        switch (this.state.ActivePage) {
+            case 'store':
+                return <Store addr={this.state.ConnectedWalletAddr}/>
+            case 'library':
+                return <UserLibrary addr={this.state.ConnectedWalletAddr} role={this.state.UserRole}/>
+            case 'p2p':
+                return <P2PMarketplace addr={this.state.ConnectedWalletAddr}/>
+            default:
+                return <h2>ERROR</h2>
+        }
 
     }
 
 
-    // renders single card
-    RenderCards = () => {
-        return(
-            <Card style={{ }}>
-                <Card.Img variant="top" src="http://media.steampowered.com/apps/csgo/blog/images/fb_image.png?v=6" />
-                <Card.Body style={{backgroundColor: '#343a40'}}>
-                    <Card.Title>Example Game</Card.Title>
-                    <Card.Text>
-                        <hr/>
-                        Description: A game about snake eating each other
-                        <hr/>
-                        Publisher: {this.state.ConnectedWalletAddr}
-                        <hr/>
-                        Price: 5 Dev
 
-                    </Card.Text>
-                    <Button variant="primary">Purchase</Button>
-                </Card.Body>
-            </Card>
-        )
+
+    // app navigation functions
+    GotoLibrary = () => {
+        this.setState({ ActivePage: 'library' })
     }
 
+    GotoStore = () => {
+        this.setState({ ActivePage: 'store' })
+    }
 
+    GotoP2P = () => {
+        this.setState({ ActivePage: 'p2p' })
+    }
 
+    ScrollToTop = (e) => {
+        window.scrollTo(0, 0)
+    }
 
 
     render() {
@@ -116,19 +130,28 @@ export default class Home extends Component {
 
 
                 {/* wallet connection button */}
-                <Button style={{ fontSize: "16px", marginTop: "40px", marginBottom: "40px" }} onClick={this.Init}>Connected Wallet: {this.state.ConnectedWalletAddr}</Button>
+                <OverlayTrigger overlay={<Tooltip id="tooltip-disabled">Tooltip!</Tooltip>}>
+                    <span className="d-inline-block">
+                        <Button style={{ fontSize: "16px", marginTop: "40px", marginBottom: "40px" }} onClick={this.Init}>Connected Wallet: {this.state.ConnectedWalletAddr}</Button>
+                    </span>
+                </OverlayTrigger>
+                <hr style={{width: "50%", margin: "auto", marginBottom: "10px"}}/>
 
 
-                {/* marketplace */}
-                <div id="modulebox">
-                    <h2>Marketplace</h2>
-                    <hr/>
-                    {this.RenderCards()}
-                    {this.RenderCards()}
-                    {this.RenderCards()}
-                    {this.RenderCards()}
+                {/* app nav */}
+                <ButtonGroup size="lg" className="mb-2" >
+                    <Button variant="success" onClick={this.GotoLibrary}>My Library</Button>
+                    <Button variant="success" onClick={this.GotoStore}>Store Page</Button>
+                    <Button variant="success" onClick={this.GotoP2P}>P2P Marketplace</Button>
+                </ButtonGroup>
+                <hr style={{width: "50%", margin: "auto", marginBottom: "40px"}}/>
 
-                </div>
+
+                <Button style={{position: "fixed", bottom:"40px", right: "40px", borderRadius: "50px", fontSize: "25px"}} onClick={this.ScrollToTop}>🔝</Button>
+
+
+                {/* render app */}
+                {this.RenderHome()}
 
             </div>
         )

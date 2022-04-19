@@ -6,8 +6,11 @@ import {
     Navbar,
     Container,
     ButtonGroup,
+    Spinner,
+    Badge,
     OverlayTrigger,
-    Tooltip
+    Tooltip,
+
 } from 'react-bootstrap'
 import Web3 from 'web3'
 import detectEthereumProvider from '@metamask/detect-provider'
@@ -25,11 +28,10 @@ export default class Home extends Component {
         super(props)
 
         this.state = {
-            ConnectedWalletAddr: "",
-            UserRole: 'player',
-            TargetContract: "",
-            ActivePage: 'store',
-            APIKey: ''
+            ConnectedWalletAddr: null,
+            UserRole: null,
+            TargetContract: null,
+            ActivePage: 'store'
         }
 
     }
@@ -83,6 +85,23 @@ export default class Home extends Component {
     // render app according to current page in state
     RenderHome = () => {
 
+
+        // return spinning if still loading
+        if (!this.state.ConnectedWalletAddr){//|| this.state.UserRole === "") {
+            return (
+                <div style={{height: "100vh"}}>
+                    <Spinner animation="border" role="status">
+                    </Spinner>
+
+                    <h1>Loading...</h1>
+                    <p>please login to your Metamask wallet if nothing happens</p>
+
+                </div>
+            )
+        }
+
+
+        // return page accoding to active page
         switch (this.state.ActivePage) {
             case 'store':
                 return <Store addr={this.state.ConnectedWalletAddr}/>
@@ -130,16 +149,28 @@ export default class Home extends Component {
 
 
                 {/* wallet connection button */}
-                <OverlayTrigger overlay={<Tooltip id="tooltip-disabled">Tooltip!</Tooltip>}>
-                    <span className="d-inline-block">
-                        <Button style={{ fontSize: "16px", marginTop: "40px", marginBottom: "40px" }} onClick={this.Init}>Connected Wallet: {this.state.ConnectedWalletAddr}</Button>
-                    </span>
+                <OverlayTrigger
+                    key="top"
+                    placement="top"
+                    overlay={
+                        <Tooltip id='tooltip-top'>
+                        Tooltip on <strong>gjnrjefrnrjank</strong>.
+                        </Tooltip>
+                    }
+                >
+                    <Button style={{ fontSize: "16px", marginTop: "40px", marginBottom: "40px", borderRadius: "25px" }} onClick={this.Init}>Connected Wallet: {this.state.ConnectedWalletAddr}</Button>
+                
                 </OverlayTrigger>
+
+                {/* user role badge */}
+                <Badge pill bg="danger" style={{width: "300px", height: "50px", display: "block", margin: "auto", marginBottom: "40px", fontSize: "24px"}}>
+                    Role: {this.state.UserRole === null ? "Loading..." : this.state.UserRole}
+                </Badge>
                 <hr style={{width: "50%", margin: "auto", marginBottom: "10px"}}/>
 
 
                 {/* app nav */}
-                <ButtonGroup size="lg" className="mb-2" >
+                <ButtonGroup size="lg" className="mb-2"  >
                     <Button variant="success" onClick={this.GotoLibrary}>My Library</Button>
                     <Button variant="success" onClick={this.GotoStore}>Store Page</Button>
                     <Button variant="success" onClick={this.GotoP2P}>P2P Marketplace</Button>
@@ -147,6 +178,7 @@ export default class Home extends Component {
                 <hr style={{width: "50%", margin: "auto", marginBottom: "40px"}}/>
 
 
+                {/* back to top button */}
                 <Button style={{position: "fixed", bottom:"40px", right: "40px", borderRadius: "50px", fontSize: "25px"}} onClick={this.ScrollToTop}>🔝</Button>
 
 

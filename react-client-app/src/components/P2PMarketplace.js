@@ -8,6 +8,7 @@ import {
     Spinner, 
     Navbar,
     Container,
+    Modal
 
 } from 'react-bootstrap'
 import './Box.css'
@@ -20,13 +21,13 @@ export default class P2PMarketplace extends Component {
         // wallet address from parent component
         this.state = {
             ConnectedWalletAddr: props.addr,
-
+            show: false
         }
     }
 
     
     // post my token listing
-    PostListing = () => {
+    PostListing = (id) => {
 
     }
 
@@ -48,7 +49,7 @@ export default class P2PMarketplace extends Component {
                         <hr/>
                         Description: A game about snake eating each other
                         <hr/>
-                        Seller: {this.state.ConnectedWalletAddr}
+                        Owner: {this.state.ConnectedWalletAddr}
                         <hr/>
                         Price: 5 Dev
 
@@ -59,8 +60,11 @@ export default class P2PMarketplace extends Component {
         )
     }
 
-
-
+    // toggle the model
+    TogglePurchaseModel = () => {
+        let temp = !this.state.show
+        this.setState({ show: temp })
+    }
 
 
 
@@ -69,11 +73,31 @@ export default class P2PMarketplace extends Component {
             <div id="modulebox">
                 <h2>P2P Market place</h2>
                 <hr />
-                {this.RenderCards()}
-                {this.RenderCards()}
-                {this.RenderCards()}
-                {this.RenderCards()}
+                
+                {/* the */}
+                <div id="griddisplay">
+                    {this.RenderCards()}
+                    {this.RenderCards()}
+                    {this.RenderCards()}
+                    {this.RenderCards()}
+                </div>
 
+                <Modal show={this.state.show} onHide={this.TogglePurchaseModel} backdrop="static" keyboard={false}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Modal title</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <ListGroup>
+                            <ListGroup.Item>Price: </ListGroup.Item>
+                            <ListGroup.Item>Fees: is price x 1.02</ListGroup.Item>
+                            <ListGroup.Item>Total: {1000}</ListGroup.Item>
+                        </ListGroup>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={this.TogglePurchaseModel}>Close</Button>
+                        <Button variant="primary">Understood</Button>
+                    </Modal.Footer>
+                </Modal>
             </div>
         )
     }

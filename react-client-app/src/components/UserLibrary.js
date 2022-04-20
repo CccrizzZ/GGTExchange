@@ -11,6 +11,7 @@ import {
 } from 'react-bootstrap'
 // import { NFTStorage } from 'nft.storage'
 import './Box.css'
+import Web3 from 'web3'
 
 
 export default class UserLibrary extends Component {
@@ -20,6 +21,7 @@ export default class UserLibrary extends Component {
         // wallet address from parent component
         this.state = {
             ConnectedWalletAddr: props.addr,
+            Contract: props.contract,
             UserRole: props.role
         }
 
@@ -27,14 +29,16 @@ export default class UserLibrary extends Component {
 
 
     GetUserLibrary = () => {
-        // axios to get user library
+
     }
 
 
     // verify ownership with smart contract
     // called when starting game
     VerifyGameOwnerShip = () => {
-        // smart contract and db connetion
+
+
+
     }
 
 
@@ -64,7 +68,24 @@ export default class UserLibrary extends Component {
     }
 
 
+    // Guest page 
+    RenderGuestPage = () => {
+        return(
+            <div id="modulebox" style={{height: '80vh'}}>
+                <hr />
+                <h2>please register as player first</h2>
+                <hr />
+            </div>
+        )
+    }
+
+
+    // player library
     RenderPlayerLibrary = () => {
+
+        // pull from smart contract
+
+
         return(
             <div id="modulebox">
                 <h2>My Library</h2>
@@ -127,11 +148,13 @@ export default class UserLibrary extends Component {
     // (admin=controlPanel, developer=mintShop, player=library)
     RenderUserLibrary = () => {
         switch (this.state.UserRole) {
-            case 'player':
+            case 'Guest':
+                return(this.RenderGuestPage ())
+            case 'Player':
                 return(this.RenderPlayerLibrary())
-            case 'developer':
+            case 'Developer':
                 return(this.RenderDeveloperMintShop())
-            case 'admin':
+            case 'Admin':
                 return(this.RenderAdminHub())
             default:
                 break;

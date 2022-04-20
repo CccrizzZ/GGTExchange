@@ -12,8 +12,7 @@ import {
 
 } from 'react-bootstrap'
 import './Box.css'
-import axios from 'axios'
-
+import Web3 from 'web3'
 
 export default class Store extends Component {
     constructor(props) {
@@ -22,7 +21,7 @@ export default class Store extends Component {
         // wallet address from parent component
         this.state = {
             ConnectedWalletAddr: props.addr,
-
+            Contract: props.contract
         }
 
     }
@@ -31,7 +30,7 @@ export default class Store extends Component {
     // pull listing from server acoording to the account
     GetMarketListing = () => {
 
-        // axios to server
+
 
     }
 

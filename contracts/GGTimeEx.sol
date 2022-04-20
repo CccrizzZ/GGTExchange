@@ -45,7 +45,7 @@ contract GGTimeEx is ERC721URIStorage {
         // set owner and set role to admin
         owner = msg.sender;
         AllUsers[msg.sender] = Roles.Admin;
-
+        TipJar = 0;
     }
 
 
@@ -64,7 +64,10 @@ contract GGTimeEx is ERC721URIStorage {
         require(AllUsers[msg.sender] == Roles.Developer, "Only Developer Can Call!");
         _;
     }
-
+    modifier OnlyGuest {
+        require(AllUsers[msg.sender] == Roles.Guest, "Only Guest Can Call!");
+        _;
+    }
 
 
 
@@ -85,7 +88,7 @@ contract GGTimeEx is ERC721URIStorage {
     function GetRole(address user) OnlyAdmin public view returns (Roles) {
         return AllUsers[user];
     }
-    function SetMeToPlayer() public {
+    function SetMeToPlayer() OnlyGuest public {
         AllUsers[msg.sender] = Roles.Player;
     }
     function GetMyRole() public view returns (Roles) {
@@ -106,6 +109,17 @@ contract GGTimeEx is ERC721URIStorage {
         string URI;
         bool approved;
         bool rejected;
+    }
+    function SubmitPitch(string memory name, uint256 price, string memory URI) OnlyDeveloper public{
+        
+        // increment game id counter
+        GIDs.increment();
+
+        // get counter current number
+        uint256 newID = GIDs.current();
+
+        // construct and push new game pitch
+        AllGamePitch[msg.sender].push(GamePitch(newID, name, price, URI, false, false));
     }
     function ApproveGameByDevID(address dev, uint256 gid) OnlyAdmin public {
         AllGamePitch[dev][gid].approved = true;
@@ -144,6 +158,8 @@ contract GGTimeEx is ERC721URIStorage {
     // purchase a listing
     function BuyGame(address player, uint256 GID) OnlyPlayer public payable {
         
+        // check if game exist
+        require(StoreListing[GID].live == true, "game not found" );
 
         // check if price match
         require(msg.value == StoreListing[GID].price , "amount send does not match amount required");
@@ -168,8 +184,9 @@ contract GGTimeEx is ERC721URIStorage {
 
         // 98 percent goto developer and 2 percent goto platform
         uint256 revenue = PendingSalesRevenue[msg.sender] * (1-(PlatformPercentage/100)) ;
-        uint fee = PendingSalesRevenue[msg.sender] * PlatformPercentage;
+        uint fee = PendingSalesRevenue[msg.sender] * (PlatformPercentage/100);
 
+        // pay the developer and add revenue to tipjar
         payable(msg.sender).transfer(revenue);
         TipJar += fee;
     }
@@ -193,6 +210,7 @@ contract GGTimeEx is ERC721URIStorage {
     }
 
     function TouchTipJar() OnlyAdmin public {
+        require(TipJar > 0, "Tip jar is empty");
         payable(owner).transfer(TipJar);
     }
 }

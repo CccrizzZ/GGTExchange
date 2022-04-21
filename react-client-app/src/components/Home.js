@@ -93,6 +93,8 @@ export default class Home extends Component {
     }
 
 
+
+
     // update user role from smart contract
     UpdateRole = async () => {
 
@@ -168,15 +170,17 @@ export default class Home extends Component {
             from: this.state.ConnectedWalletAddr
         }).on('error', (error) => {
             alert("Error: Transaction Failed")
+            this.setState({isWaitingForBlockchain: false})
         })
         console.log(result)
 
+        // hide pop over
+        this.setState({isWaitingForBlockchain: false})
+        
         // refersh role
         this.UpdateRole()
         alert("You have registered as a developer")
 
-        // hide pop over
-        this.setState({isWaitingForBlockchain: false})
     }
 
 
@@ -193,7 +197,7 @@ export default class Home extends Component {
                     </Spinner>
 
                     <h1>Loading...</h1>
-                    <p>please login to your Metamask wallet if nothing happens</p>
+                    <p>please login to your Metamask wallet and click the blue button above if nothing happens</p>
 
                 </div>
             )
@@ -203,11 +207,11 @@ export default class Home extends Component {
         // return page accoding to active page
         switch (this.state.ActivePage) {
             case 'store':
-                return <Store addr={this.state.ConnectedWalletAddr} contract={this.state.ConnectedContract}/>
+                return <Store addr={this.state.ConnectedWalletAddr} contract={this.state.ConnectedContract} RenderCards={this.RenderCards}/>
             case 'library':
-                return <UserLibrary addr={this.state.ConnectedWalletAddr} contract={this.state.ConnectedContract} role={this.state.UserRole} />
+                return <UserLibrary addr={this.state.ConnectedWalletAddr} contract={this.state.ConnectedContract} role={this.state.UserRole} RenderCards={this.RenderCards}/>
             case 'p2p':
-                return <P2PMarketplace addr={this.state.ConnectedWalletAddr} contract={this.state.ConnectedContract}/>
+                return <P2PMarketplace addr={this.state.ConnectedWalletAddr} contract={this.state.ConnectedContract} RenderCards={this.RenderCards}/>
             default:
                 return <h2>ERROR</h2>
         }
@@ -215,23 +219,43 @@ export default class Home extends Component {
     }
 
 
+    // renders single card
+    RenderCards = (img) => {
+        return(
+            <Card style={{ width: '100%' }}>
+                <Card.Img variant="top" src={img}/>
+                <Card.Body style={{backgroundColor: '#343a40'}}>
+                    <Card.Title>Example Game</Card.Title>
+                    <Card.Text>
+                        <hr/>
+                        Description: A game about snake eating each other
+                        <hr/>
+                        Publisher: {this.state.ConnectedWalletAddr}
+                        <hr/>
+                        Price: 5 Dev
+
+                    </Card.Text>
+                    <Button variant="primary">Purchase</Button>
+                </Card.Body>
+            </Card>
+        )
+    }
 
     // app navigation functions
     GotoLibrary = () => {
         this.setState({ ActivePage: 'library' })
     }
-
     GotoStore = () => {
         this.setState({ ActivePage: 'store' })
     }
-
     GotoP2P = () => {
         this.setState({ ActivePage: 'p2p' })
     }
-
     ScrollToTop = (e) => {
         window.scrollTo(0, 0)
     }
+
+
 
 
     render() {
@@ -293,13 +317,15 @@ export default class Home extends Component {
                     show={this.state.isWaitingForBlockchain}
                     backdrop="static"
                     keyboard={false}
+                    size="sm"
+                    centered
+                    style={{ background: "rgba(33, 33, 33, 0.8)" }}
                 >
-                    <Modal.Header>
-                        <Modal.Title>Waiting for Blockchain...</Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body>
-                        <Spinner style={{margin: "auto"}}animation="grow" variant="danger" />
-                    </Modal.Body>
+                    <p style={{marginTop: "40px", marginBottom: "20px", margin: "auto", padding: "20px"}}>
+                        <Spinner animation="border" variant="success" />
+                    </p>
+                    <p style={{marginTop: "20px", marginBottom: "20px", margin: "auto", padding: "20px"}}>Waiting for Blockchain...</p>
+                
                 </Modal>
 
             </div>

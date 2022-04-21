@@ -8,7 +8,8 @@ import {
     Spinner, 
     Navbar,
     Container,
-    Modal
+    Modal,
+    Form
 
 } from 'react-bootstrap'
 import './Box.css'
@@ -21,43 +22,22 @@ export default class P2PMarketplace extends Component {
         // wallet address from parent component
         this.state = {
             ConnectedWalletAddr: props.addr,
+            Contract: props.contract,
+            RenderCards: props.RenderCards,
             show: false
         }
     }
 
     
     // post my token listing
-    PostListing = (id) => {
+    PostListing = (name, price) => {
 
     }
 
 
     // purchase token by id
-    Purchase = (id) => {
+    Purchase = (gid) => {
 
-    }
-
-
-    // renders single card
-    RenderCards = () => { 
-        return(
-            <Card style={{ }}>
-                <Card.Img variant="top" src="http://media.steampowered.com/apps/csgo/blog/images/fb_image.png?v=6" />
-                <Card.Body style={{backgroundColor: '#343a40'}}>
-                    <Card.Title>Example Game</Card.Title>
-                    <Card.Text>
-                        <hr/>
-                        Description: A game about snake eating each other
-                        <hr/>
-                        Owner: {this.state.ConnectedWalletAddr}
-                        <hr/>
-                        Price: 5 Dev
-
-                    </Card.Text>
-                    <Button variant="primary">Purchase</Button>
-                </Card.Body>
-            </Card>
-        )
     }
 
     // toggle the model
@@ -76,10 +56,12 @@ export default class P2PMarketplace extends Component {
                 
                 {/* the */}
                 <div id="griddisplay">
-                    {this.RenderCards()}
-                    {this.RenderCards()}
-                    {this.RenderCards()}
-                    {this.RenderCards()}
+                    {this.state.RenderCards("http://media.steampowered.com/apps/csgo/blog/images/fb_image.png?v=6")}
+                    {this.state.RenderCards("http://media.steampowered.com/apps/csgo/blog/images/fb_image.png?v=6")}
+                    {this.state.RenderCards("http://media.steampowered.com/apps/csgo/blog/images/fb_image.png?v=6")}
+                    {this.state.RenderCards("https://cdn.akamai.steamstatic.com/steam/apps/1046930/capsule_616x353.jpg?t=1621357797")}
+                    {this.state.RenderCards("https://cdn.akamai.steamstatic.com/steam/apps/1046930/capsule_616x353.jpg?t=1621357797")}
+
                 </div>
 
                 <Modal show={this.state.show} onHide={this.TogglePurchaseModel} backdrop="static" keyboard={false}>

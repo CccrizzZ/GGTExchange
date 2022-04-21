@@ -2,11 +2,13 @@ import React, { Component } from 'react'
 import { 
     Button, 
     Card, 
+    Modal,
     ListGroup, 
     InputGroup, 
     FormControl, 
     Spinner,
-    Table
+    Table,
+    Form
 
 } from 'react-bootstrap'
 // import { NFTStorage } from 'nft.storage'
@@ -22,13 +24,15 @@ export default class UserLibrary extends Component {
         this.state = {
             ConnectedWalletAddr: props.addr,
             Contract: props.contract,
-            UserRole: props.role
+            UserRole: props.role,
+            ShowGameSubmitPanel: false
         }
 
-    }
+        // refs
+        this.GameTitleInput = React.createRef()
+        this.GameDescInput = React.createRef()
+        this.GameRender = React.createRef()
 
-
-    GetUserLibrary = () => {
 
     }
 
@@ -37,35 +41,10 @@ export default class UserLibrary extends Component {
     // called when starting game
     VerifyGameOwnerShip = () => {
 
-
+        // pull from smart contract
 
     }
 
-
-
-
-
-    // renders single card
-    RenderCards = () => { 
-        return(
-            <Card style={{ }}>
-                <Card.Img variant="top" src="http://media.steampowered.com/apps/csgo/blog/images/fb_image.png?v=6" />
-                <Card.Body style={{backgroundColor: '#343a40'}}>
-                    <Card.Title>Example Game</Card.Title>
-                    <Card.Text>
-                        <hr/>
-                        Description: A game about snake eating each other
-                        <hr/>
-                        Publisher: {this.state.ConnectedWalletAddr}
-                        <hr/>
-                        Price: 5 Dev
-
-                    </Card.Text>
-                    <Button variant="primary">Purchase</Button>
-                </Card.Body>
-            </Card>
-        )
-    }
 
 
     // Guest page 
@@ -78,8 +57,32 @@ export default class UserLibrary extends Component {
             </div>
         )
     }
+    
+    
+    
+    
+    
+    RenderLibraryCard = (img) => {
+        return(
+            <Card style={{ width: '100%' }}>
+                <Card.Img variant="top" src={img}/>
+                <Card.Body style={{backgroundColor: '#343a40'}}>
+                    <Card.Title>Example Game</Card.Title>
+                    <Card.Text>
+                        <hr/>
+                        Description: A game about snake eating each other
+                        <hr/>
+                        Publisher: {this.state.ConnectedWalletAddr}
+                        <hr/>
+                        Price: 5 Dev
 
-
+                    </Card.Text>
+                    <Button variant="success">Play</Button>
+                </Card.Body>
+            </Card>
+        )
+    }
+    
     // player library
     RenderPlayerLibrary = () => {
 
@@ -92,10 +95,7 @@ export default class UserLibrary extends Component {
                 <hr />
 
                 <div id="griddisplay">
-                    {this.RenderCards()}
-                    {this.RenderCards()}
-                    {this.RenderCards()}
-                    {this.RenderCards()}
+                    {this.state.RenderCards("http://media.steampowered.com/apps/csgo/blog/images/fb_image.png?v=6")}
                 </div>
 
             </div>
@@ -104,6 +104,31 @@ export default class UserLibrary extends Component {
 
 
 
+
+
+    ShowGameSubmitModal = () => {
+        this.setState({ShowGameSubmitPanel: true})
+    }
+
+    CloseGameSubmitModal = () => {
+        this.setState({ShowGameSubmitPanel: false})
+    }
+
+    SubmitPitch = () => {
+
+        // null check for inputs
+        // if(this.GameDescInput.value == "")
+
+
+        // get game description, name, and pictures
+        let GameDescription = this.GameDescInput.value
+        let GameName = this.GameNameInput.value
+
+        // call smart contract
+
+
+    }
+
     // developers submit their games here for admin to review
     RenderDeveloperMintShop = () => {
         return(
@@ -111,15 +136,45 @@ export default class UserLibrary extends Component {
                 <h2>Developer Hub</h2>
                 <hr />
 
-                {/* upload panel */}
-                
-                
+                {/* upload panel for developers */}
+                <Modal
+                    show={this.state.ShowGameSubmitPanel}
+                    onHide={this.state.CloseGameSubmitModal}
+                    backdrop="static"
+                    keyboard={false}
+                >
+                    <Modal.Header closeButton>
+                        <Modal.Title>Submit Game</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <Form>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Game title:</Form.Label>
+                                <Form.Control type="text" placeholder="Normal text" />
+                            </Form.Group>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Game Description:</Form.Label>
+                                <Form.Control id="game_desc" as="textarea" rows={3} />
+                            </Form.Group>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Demo Pictures</Form.Label>
+                                <Form.Control type="file" size="sm" />
+                            </Form.Group>
+
+                        </Form>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={this.CloseGameSubmitModal}>Cancel</Button>
+                        <Button variant="primary" onClick={this.SubmitPitch}>Submit</Button>
+                    </Modal.Footer>
+                </Modal>
+                            
                 
                 {/* existing uploads (pitch) */}
-                <hr/>
                 <h4>My Game Pitch</h4>
                 <hr/>
 
+                <Button variant="primary" onClick={this.ShowGameSubmitModal}>Submit New Game</Button>
                 <div id="griddisplay">
 
 
@@ -130,6 +185,11 @@ export default class UserLibrary extends Component {
     }
 
     
+
+
+
+
+
 
     // admin approve developer's pitch
     RenderAdminHub = () => {
@@ -143,6 +203,17 @@ export default class UserLibrary extends Component {
         )
     }
     
+
+
+
+
+
+
+
+
+
+
+
 
     // render library according to role
     // (admin=controlPanel, developer=mintShop, player=library)

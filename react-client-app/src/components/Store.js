@@ -21,7 +21,8 @@ export default class Store extends Component {
         // wallet address from parent component
         this.state = {
             ConnectedWalletAddr: props.addr,
-            Contract: props.contract
+            Contract: props.contract,
+            RenderCards: props.RenderCards
         }
 
     }
@@ -29,33 +30,12 @@ export default class Store extends Component {
 
     // pull listing from server acoording to the account
     GetMarketListing = () => {
-
+        
 
 
     }
 
 
-    // renders single card
-    RenderCards = () => {
-        return(
-            <Card style={{ width: '100%', display: 'inline-block' }}>
-                <Card.Img variant="top" src="http://media.steampowered.com/apps/csgo/blog/images/fb_image.png?v=6" />
-                <Card.Body style={{backgroundColor: '#343a40'}}>
-                    <Card.Title>Example Game</Card.Title>
-                    <Card.Text>
-                        <hr/>
-                        Description: A game about snake eating each other
-                        <hr/>
-                        Publisher: {this.state.ConnectedWalletAddr}
-                        <hr/>
-                        Price: 5 Dev
-
-                    </Card.Text>
-                    <Button variant="primary">Purchase</Button>
-                </Card.Body>
-            </Card>
-        )
-    }
 
 
 
@@ -65,10 +45,10 @@ export default class Store extends Component {
                 <h2>Store Page</h2>
                 <hr />
                 <div id="griddisplay">
-                    {this.RenderCards()}
-                    {this.RenderCards()}
-                    {this.RenderCards()}
-                    {this.RenderCards()}
+                    {this.state.RenderCards("http://media.steampowered.com/apps/csgo/blog/images/fb_image.png?v=6")}
+                    {this.state.RenderCards("https://cdn.akamai.steamstatic.com/steam/apps/570/header.jpg?t=1639608963")}
+                    {this.state.RenderCards("https://cdn.akamai.steamstatic.com/steam/apps/1046930/capsule_616x353.jpg?t=1621357797")}
+                    {this.state.RenderCards("https://img.republicworld.com/republic-prod/stories/promolarge/xhdpi/yw9cmbd1dibhnkzv_1644326540.jpeg")}
 
                 </div>
 

@@ -31,9 +31,8 @@ export default class UserLibrary extends Component {
         // refs
         this.GameTitleInput = React.createRef()
         this.GameDescInput = React.createRef()
-        this.GameRender = React.createRef()
-
-
+        this.GamePicsInput = React.createRef()
+        
     }
 
 
@@ -57,7 +56,6 @@ export default class UserLibrary extends Component {
             </div>
         )
     }
-    
     
     
     
@@ -105,15 +103,16 @@ export default class UserLibrary extends Component {
 
 
 
-
+    // show or clsoe developer pitching modal
     ShowGameSubmitModal = () => {
         this.setState({ShowGameSubmitPanel: true})
     }
-
     CloseGameSubmitModal = () => {
         this.setState({ShowGameSubmitPanel: false})
     }
 
+
+    // developer submit pitch
     SubmitPitch = () => {
 
         // null check for inputs
@@ -121,8 +120,17 @@ export default class UserLibrary extends Component {
 
 
         // get game description, name, and pictures
-        let GameDescription = this.GameDescInput.value
-        let GameName = this.GameNameInput.value
+        let GameDescription = this.GameDescInput
+        let GameName = this.GameNameInput
+        let GamePics = this.GamePicsInput
+
+
+        console.log(GameDescription)
+        console.log(GameName)
+        console.log(GamePics)
+
+
+
 
         // call smart contract
 
@@ -132,7 +140,7 @@ export default class UserLibrary extends Component {
     // developers submit their games here for admin to review
     RenderDeveloperMintShop = () => {
         return(
-            <div id="modulebox">
+            <div id="modulebox" style={{minHeight: '80vh'}}>
                 <h2>Developer Hub</h2>
                 <hr />
 
@@ -150,15 +158,15 @@ export default class UserLibrary extends Component {
                         <Form>
                             <Form.Group className="mb-3">
                                 <Form.Label>Game title:</Form.Label>
-                                <Form.Control type="text" placeholder="Normal text" />
+                                <Form.Control ref={this.GameTitleInput} type="text" placeholder="Normal text" />
                             </Form.Group>
                             <Form.Group className="mb-3">
                                 <Form.Label>Game Description:</Form.Label>
-                                <Form.Control id="game_desc" as="textarea" rows={3} />
+                                <Form.Control ref={this.GameDescInput}  id="game_desc" as="textarea" rows={3} />
                             </Form.Group>
                             <Form.Group className="mb-3">
                                 <Form.Label>Demo Pictures</Form.Label>
-                                <Form.Control type="file" size="sm" />
+                                <Form.Control ref={this.GamePicsInput} type="file" size="sm" />
                             </Form.Group>
 
                         </Form>

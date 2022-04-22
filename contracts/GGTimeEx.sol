@@ -8,7 +8,7 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contr
 contract GGTimeEx is ERC721URIStorage {
 
     // owner address
-    address owner;
+    address public owner;
 
 
     // counter utility for erc721
@@ -24,8 +24,6 @@ contract GGTimeEx is ERC721URIStorage {
     uint256 public constant PlatformPercentage = 2;
 
 
-
-
     // P2P market listing
     // token id and price
     mapping(uint256 => P2PListing) P2PStoreListing;
@@ -34,10 +32,6 @@ contract GGTimeEx is ERC721URIStorage {
         uint256 price;
         bool sold;  // determines if the item is already sold
     }
-
-
-
-
 
 
     // constructor also ERC721's contructor
@@ -54,12 +48,10 @@ contract GGTimeEx is ERC721URIStorage {
         require(AllUsers[msg.sender] == Roles.Admin, "Only Admin Can Call!");
         _;
     }
-
     modifier OnlyPlayer {
         require(AllUsers[msg.sender] == Roles.Player, "Only Player Can Call!");
         _;
     }
-
     modifier OnlyDeveloper {
         require(AllUsers[msg.sender] == Roles.Developer, "Only Developer Can Call!");
         _;
@@ -91,6 +83,9 @@ contract GGTimeEx is ERC721URIStorage {
     function SetMeToPlayer() OnlyGuest public {
         AllUsers[msg.sender] = Roles.Player;
     }
+    function SetMeToDeveloper() OnlyPlayer public {
+        AllUsers[msg.sender] = Roles.Developer;
+    }
     function GetMyRole() public view returns (Roles) {
         return AllUsers[msg.sender];
     }
@@ -110,7 +105,7 @@ contract GGTimeEx is ERC721URIStorage {
         bool approved;
         bool rejected;
     }
-    function SubmitPitch(string memory name, uint256 price, string memory URI) OnlyDeveloper public{
+    function SubmitPitch(string memory name, uint256 price, string memory URI) OnlyDeveloper public returns(uint256) {
         
         // increment game id counter
         GIDs.increment();
@@ -120,6 +115,8 @@ contract GGTimeEx is ERC721URIStorage {
 
         // construct and push new game pitch
         AllGamePitch[msg.sender].push(GamePitch(newID, name, price, URI, false, false));
+
+        return newID;
     }
     function ApproveGameByDevID(address dev, uint256 gid) OnlyAdmin public {
         AllGamePitch[dev][gid].approved = true;
@@ -127,6 +124,8 @@ contract GGTimeEx is ERC721URIStorage {
     function RejectGameByDevID(address dev, uint256 gid) OnlyAdmin public {
         AllGamePitch[dev][gid].rejected = true;
     }
+
+
 
 
 
@@ -175,6 +174,7 @@ contract GGTimeEx is ERC721URIStorage {
         // mint the token to the player and set its uri
         _mint(player, newID);
         _setTokenURI(newID, StoreListing[GID].URI);
+
         // add token id under player token mapping
         UserLibrary[player].push(newID);
         PendingSalesRevenue[StoreListing[GID].publisher] += msg.value;
@@ -183,8 +183,8 @@ contract GGTimeEx is ERC721URIStorage {
         require(PendingSalesRevenue[msg.sender] > 0, "You have nothing to withdraw");
 
         // 98 percent goto developer and 2 percent goto platform
-        uint256 revenue = PendingSalesRevenue[msg.sender] * (1-(PlatformPercentage/100)) ;
-        uint fee = PendingSalesRevenue[msg.sender] * (PlatformPercentage/100);
+        uint256 revenue = PendingSalesRevenue[msg.sender] * (1 - (PlatformPercentage / 100)) ;
+        uint fee = PendingSalesRevenue[msg.sender] * (PlatformPercentage / 100);
 
         // pay the developer and add revenue to tipjar
         payable(msg.sender).transfer(revenue);
@@ -195,12 +195,26 @@ contract GGTimeEx is ERC721URIStorage {
 
 
 
+
     // user owned tokens
+    // (user address ==>> tokenID array)
     mapping(address => uint256[]) UserLibrary;
-    // returns array of all tokens
+    // return user library array 
     function GetTokenArray(address addr) OnlyPlayer public view returns(uint256[] memory) {
         return(UserLibrary[addr]);
     }
+
+
+    // player display name
+    mapping(address => string) UserDisplayNames;
+    function SetMyDisplayName(string memory name) public {
+        UserDisplayNames[msg.sender] = name;
+    }
+    function GetMyDisplayName() public view returns(string memory){
+        return UserDisplayNames[msg.sender];
+    }
+
+
 
 
     // platform income

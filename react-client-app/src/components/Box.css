@@ -1,12 +1,14 @@
+
 #modulebox 
 {
-    border: 5px solid #343a40;
+    border: 2px solid black;
     border-radius: 25px;
     width: 80%;
     min-width: 1000px; 
     margin: auto;
     padding: 20px; 
-    justify-content: center
+    justify-content: center;
+    background-color: #0d1117;
 }
 
 #griddisplay
@@ -15,4 +17,35 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 50px;
     grid-auto-rows: minmax(100px, auto);
+}
+
+#playercard
+{
+    border: 2px solid black;
+    border-radius: 25px;
+    width: 50%;
+    margin: auto;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    background-color: #0d1117;
+    min-width: 500px;
+    max-width: 600px;
+    padding: 20px;
+}
+
+#playerbadge{
+    border: 2px solid black;
+    border-radius: 25px;
+    height: 30px;
+    display: block;
+    margin: auto;
+    margin-bottom: 40px;
+    font-size: 18px;
+    width: 300px;
+    background-color:#8D12C1;
+}
+
+#purplebutton{
+    background-color:#8D12C1;
+    border: 2px solid black;
 }

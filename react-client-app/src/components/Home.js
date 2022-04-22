@@ -1,33 +1,35 @@
 import React, { Component } from 'react'
 import { 
     Button, 
-    ListGroup, 
     Card,
     Navbar,
     Container,
     ButtonGroup,
     Spinner,
-    Badge,
+    InputGroup,
     OverlayTrigger,
     Tooltip,
-    Modal
+    Modal,
+    FormControl
 } from 'react-bootstrap'
 import Web3 from 'web3'
 import detectEthereumProvider from '@metamask/detect-provider'
+import Jazzicon, { jsNumberForAddress } from 'react-jazzicon'
 import Store from './Store'
 import UserLibrary from './UserLibrary'
 import P2PMarketplace from './P2PMarketplace'
 import ggicon1 from '../asset/ggicon1.png'
-import './Box.css'
+import bg from '../asset/bg.jpg'
 import ContractABI from './ContractABI.json'
+import './Box.css'
+
+
 
 // role from smart contract
-// enum Roles {
-//     Guest,
-//     Player,
-//     Developer,
-//     Admin
-// }
+// 0 Guest
+// 1 Player
+// 2 Developer
+// 3 Admin
 
 
 export default class Home extends Component {
@@ -37,14 +39,19 @@ export default class Home extends Component {
         super(props)
 
         this.state = {
-            TargetContractAddr: '0xDbBa8d83f9dc07C3F00Ad46aAD37389d33cD484D',
+            TargetContractAddr: '0xEF998a565f29A77C66F45a8347aD10Bc9124c754',
             ConnectedWalletAddr: null,
             ConnectedContract: null,
             UserRole: null,
             TargetContract: null,
             ActivePage: 'store',
-            isWaitingForBlockchain: false
+            UserDisplayName: null,
+            isWaitingForBlockchain: false,
+            isChangingName: false,
         }
+
+        // refs
+        this.UserNameInput = React.createRef()
 
     }
     
@@ -90,6 +97,7 @@ export default class Home extends Component {
 
         // update user role
         this.UpdateRole()
+        this.UpdateName()
     }
 
 
@@ -123,6 +131,53 @@ export default class Home extends Component {
 
     }
 
+    
+    UpdateName = async () => {
+        // call smart contract function
+        let result = await this.state.ConnectedContract.methods.GetMyDisplayName()
+        .call({
+            from: this.state.ConnectedWalletAddr
+        })
+
+        // null check on name
+        if(result == null || result === "") return
+
+        // store user name
+        this.setState({
+            UserDisplayName: result
+        })        
+
+
+    }
+
+
+    // set player display name
+    SetName = async () => {
+
+        // show pop over
+        this.SetWaiting()
+
+        let newName = this.UserNameInput.value
+
+
+        // call smart contract function
+        let result = await this.state.ConnectedContract.methods.SetMyDisplayName()
+        .send({
+            from: this.state.ConnectedWalletAddr
+        }).on('error', async (error) => {
+            alert("Error: Transaction Failed")
+            // hide pop over
+            this.SetIdle()
+        })
+        console.log(result)
+    
+    
+        // hide pop over
+        this.SetIdle()
+  
+        // refresh name
+        this.UpdateName()
+    }
 
 
 
@@ -133,7 +188,7 @@ export default class Home extends Component {
         if(this.state.ConnectedContract == null) return
 
         // show pop over
-        this.setState({isWaitingForBlockchain: true})
+        this.SetWaiting()
 
         // call smart contract function
         let result = await this.state.ConnectedContract.methods.SetMeToPlayer()
@@ -142,13 +197,12 @@ export default class Home extends Component {
         }).on('error', async (error) => {
             alert("Error: Transaction Failed")
             // hide pop over
-
-            this.setState({isWaitingForBlockchain: false})
+            this.SetIdle()
         })
         console.log(result)
 
         // hide pop over
-        this.setState({isWaitingForBlockchain: false})
+        this.SetIdle()
 
         // refersh role
         this.UpdateRole()
@@ -162,7 +216,7 @@ export default class Home extends Component {
     // register player to developer
     RegisterAsDeveloper = async () => {
         // show pop over
-        this.setState({isWaitingForBlockchain: true})
+        this.SetWaiting()
         
         // call smart contract function
         let result = await this.state.ConnectedContract.methods.SetMeToDeveloper()
@@ -170,12 +224,13 @@ export default class Home extends Component {
             from: this.state.ConnectedWalletAddr
         }).on('error', (error) => {
             alert("Error: Transaction Failed")
-            this.setState({isWaitingForBlockchain: false})
+            this.SetIdle()
+
         })
         console.log(result)
 
         // hide pop over
-        this.setState({isWaitingForBlockchain: false})
+        this.SetIdle()
         
         // refersh role
         this.UpdateRole()
@@ -219,8 +274,10 @@ export default class Home extends Component {
     }
 
 
+
+
     // renders single card
-    RenderCards = (img) => {
+    RenderCards = (img, name, desc, price) => {
         return(
             <Card style={{ width: '100%' }}>
                 <Card.Img variant="top" src={img}/>
@@ -257,10 +314,61 @@ export default class Home extends Component {
 
 
 
+    // toggle the waiting model
+    SetWaiting = () => {
+        this.setState({IsWaitingForBlockchain: true})
+    }
+    SetIdle = () => {
+        this.setState({IsWaitingForBlockchain: false})
+    }
+
+    // toggle the change name model
+    SetChangingName = () => {
+        this.setState({isChangingName: true})
+    }
+    SetChangingNameOff = () => {
+        this.setState({isChangingName: false})
+    }
+
+
+
+    // return user info card
+    RenderUserInfoCard = () => {
+        return(
+            <div id="playercard">
+
+                {/* avatar */}
+                <div style={{ margin: "auto", marginTop: "20px", marginBottom: "20px"}}>
+                    <Jazzicon diameter={100} seed={this.state.ConnectedWalletAddr ? jsNumberForAddress(this.state.ConnectedWalletAddr) : null} />
+                </div>
+                
+                {/* display name */}
+                <OverlayTrigger placement="top" overlay={ <Tooltip id='tooltip-top'>Click to <strong>Reset Display Name</strong>.</Tooltip>}>
+                    <Button id="purplebutton" style={{ fontSize: "16px", marginBottom: "20px", borderRadius: "25px" }} onClick={this.SetChangingName}>{this.state.UserDisplayName === null ? `NoName` : this.state.UserRole}</Button>
+                </OverlayTrigger>
+                <hr />
+
+                {/* wallet connection button */}
+                <OverlayTrigger placement="top" overlay={ <Tooltip id='tooltip-top'>Click to <strong>Reconnect Wallet</strong>.</Tooltip>}>
+                    <Button id="purplebutton" style={{ fontSize: "16px", marginBottom: "40px", borderRadius: "25px"}} onClick={this.Init}><strong>Connected Wallet: {this.state.ConnectedWalletAddr}</strong></Button>
+                </OverlayTrigger>
+
+                {/* user role badge */}
+                <div id="playerbadge">
+                    Role: {this.state.UserRole === null ? "Loading..." : this.state.UserRole}
+                </div>
+                {this.state.UserRole === "Guest" ? <Button style={{marginBottom: "40px", backgroundColor:"#8D12C1", border: "2px solid black"}} onClick={this.RegisterAsPlayer} variant="success">Register as Player</Button> : null} 
+                {this.state.UserRole === "Player" ? <Button style={{marginBottom: "40px", backgroundColor:"#8D12C1", border: "2px solid black"}} onClick={this.RegisterAsDeveloper} variant="success">Register as Developer</Button> : null} 
+            </div>
+        )
+    }
+
+
+
 
     render() {
         return (
-            <div style={{ display: "block", backgroundColor: "#0d1117", height: "auto", color: "#fff" }}>
+            <div style={{ display: "block", backgroundImage: `url(${bg})`, height: "auto", color: "#fff" }}>
                 
                 {/* navbar */}
                 <Navbar bg="dark" variant="dark">
@@ -269,50 +377,28 @@ export default class Home extends Component {
                     </Container>
                 </Navbar>
 
-
-                {/* wallet connection button */}
-                <OverlayTrigger
-                    key="top"
-                    placement="top"
-                    overlay={
-                        <Tooltip id='tooltip-top'>
-                        Click to <strong>Reconnect Wallet</strong>.
-                        </Tooltip>
-                    }
-                >
-                    <Button style={{ fontSize: "16px", marginTop: "40px", marginBottom: "40px", borderRadius: "25px" }} onClick={this.Init}>Connected Wallet: {this.state.ConnectedWalletAddr}</Button>
+                {/* user info card */}
+                {this.RenderUserInfoCard()}
                 
-                </OverlayTrigger>
-
-                {/* user role badge */}
-                <Badge onClick={this.UpdateRole} pill bg="danger" style={{width: "300px", height: "50px", display: "block", margin: "auto", marginBottom: "40px", fontSize: "24px"}}>
-                    Role: {this.state.UserRole === null ? "Loading..." : this.state.UserRole}
-                </Badge>
-                {this.state.UserRole === "Guest" ? <Button style={{marginBottom: "40px"}} onClick={this.RegisterAsPlayer} variant="success">Register as Player</Button> : null} 
-                {this.state.UserRole === "Player" ? <Button style={{marginBottom: "40px"}} onClick={this.RegisterAsDeveloper} variant="success">Register as Developer</Button> : null} 
-
-                <hr style={{width: "50%", margin: "auto", marginBottom: "10px"}}/>
-
 
                 {/* app nav */}
-                <ButtonGroup size="lg" className="mb-2"  >
-                    <Button variant="success" onClick={this.GotoLibrary}>My Library</Button>
-                    <Button variant="success" onClick={this.GotoStore}>Store Page</Button>
-                    <Button variant="success" onClick={this.GotoP2P}>P2P Marketplace</Button>
-                </ButtonGroup>
-                <hr style={{width: "50%", margin: "auto", marginBottom: "40px"}}/>
-
+                <div id="playercard">
+                    <ButtonGroup size="lg" className="mb-2"  >
+                        <Button id="purplebutton" onClick={this.GotoLibrary}>My Library</Button>
+                        <Button id="purplebutton" onClick={this.GotoStore}>Store Page</Button>
+                        <Button id="purplebutton" onClick={this.GotoP2P}>P2P Marketplace</Button>
+                    </ButtonGroup>
+                </div>
 
                 {/* back to top button */}
-                <Button style={{position: "fixed", bottom:"40px", right: "40px", borderRadius: "50px", fontSize: "25px"}} onClick={this.ScrollToTop}>🔝</Button>
+                <Button id="purplebutton" style={{position: "fixed", bottom:"40px", right: "40px", borderRadius: "50px", fontSize: "25px", zIndex: "1"}} onClick={this.ScrollToTop}>🔝</Button>
 
 
                 {/* render app */}
                 {this.RenderHome()}
 
-
                 
-                {/* loading pop over */}
+                {/* waiting pop over */}
                 <Modal
                     show={this.state.isWaitingForBlockchain}
                     backdrop="static"
@@ -326,6 +412,27 @@ export default class Home extends Component {
                     </p>
                     <p style={{marginTop: "20px", marginBottom: "20px", margin: "auto", padding: "20px"}}>Waiting for Blockchain...</p>
                 
+                </Modal>
+
+
+                {/* waiting pop over */}
+                <Modal
+                    show={this.state.isChangingName}
+                    backdrop="static"
+                    keyboard={false}
+                    size="md"
+                    centered
+                    style={{ background: "rgba(33, 33, 33, 0.8)"}}
+                >  
+                    <div style={{margin: "auto"}}>
+                        <h4>Enter New Name</h4>
+                        <p>Maximum 16 characters</p>
+                    </div>
+                    <InputGroup className="mb-3" style={{ marginTop: "20px", marginBottom: "20px"}}>
+                        <FormControl maxlength="16" placeholder="New Username"/>
+                        <Button variant="primary" onClick={this.SubmitNewName}>Submit</Button>
+                        <Button variant="secondary" onClick={this.SetChangingNameOff}>Cancel</Button>
+                    </InputGroup>
                 </Modal>
 
             </div>

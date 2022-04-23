@@ -21,10 +21,7 @@ export default class P2PMarketplace extends Component {
 
         // wallet address from parent component
         this.state = {
-            ConnectedWalletAddr: props.addr,
-            Contract: props.contract,
-            RenderCards: props.RenderCards,
-            show: false
+            show: false,
         }
     }
 

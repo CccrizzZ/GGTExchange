@@ -22,16 +22,14 @@ export default class UserLibrary extends Component {
 
         // wallet address from parent component
         this.state = {
-            ConnectedWalletAddr: props.addr,
-            Contract: props.contract,
-            UserRole: props.role,
-            ShowGameSubmitPanel: false
+            ShowGameSubmitPanel: false,
         }
 
         // refs
         this.GameTitleInput = React.createRef()
         this.GameDescInput = React.createRef()
         this.GamePicsInput = React.createRef()
+        this.GamePriceInput = React.createRef()
         
     }
 
@@ -70,7 +68,7 @@ export default class UserLibrary extends Component {
                         <hr/>
                         Description: A game about snake eating each other
                         <hr/>
-                        Publisher: {this.state.ConnectedWalletAddr}
+                        Publisher: {this.props.WalletAddr}
                         <hr/>
                         Price: 5 Dev
 
@@ -112,28 +110,46 @@ export default class UserLibrary extends Component {
     }
 
 
-    // developer submit pitch
-    SubmitPitch = () => {
+    // developer submit IPFS links containing their pitch
+    // if approved it will be listed on the marketplace
+    SubmitPitch = async () => {
 
         // null check for inputs
         // if(this.GameDescInput.value == "")
 
 
         // get game description, name, and pictures
-        let GameDescription = this.GameDescInput
-        let GameName = this.GameNameInput
-        let GamePics = this.GamePicsInput
+        // let GameName = this.GameTitleInput.current.value
+        let GameDescription = this.GameDescInput.current.value
+        // let GamePics = this.GamePicsInput.current.value
+        // let GamePrice = this.GamePriceInput.current.value
 
 
         console.log(GameDescription)
-        console.log(GameName)
-        console.log(GamePics)
 
 
+        // if (GameName === "" || GameDescription === "") {
+        //     alert("Please complete the form")
+        //     return
+        // }
 
+        // show pop over
+        this.props.ShowPopup()
 
-        // call smart contract
+        // call smart contract function
+        // func(string memory name, uint256 price, string memory URI)
+        let result = await this.props.ConnectedContract.methods.SubmitPitch()
+        .send({
+            from: this.props.WalletAddr
+        }).on('error', async (error) => {
+            alert("Error: Transaction Failed")
+            // hide pop over
+            this.SetIdle()
+        })
+        console.log(result)
 
+        // hide pop over
+        this.HideWaitingPopup()
 
     }
 
@@ -168,7 +184,10 @@ export default class UserLibrary extends Component {
                                 <Form.Label>Demo Pictures</Form.Label>
                                 <Form.Control ref={this.GamePicsInput} type="file" size="sm" />
                             </Form.Group>
-
+                            <Form.Group className="mb-3">
+                                <Form.Label>Your Price (in DEV):</Form.Label>
+                                <Form.Control ref={this.GamePrice} type="number" placeholder="Normal text" />
+                            </Form.Group>
                         </Form>
                     </Modal.Body>
                     <Modal.Footer>
@@ -187,7 +206,6 @@ export default class UserLibrary extends Component {
 
 
                 </div>
-
             </div>
         )
     }
@@ -226,7 +244,7 @@ export default class UserLibrary extends Component {
     // render library according to role
     // (admin=controlPanel, developer=mintShop, player=library)
     RenderUserLibrary = () => {
-        switch (this.state.UserRole) {
+        switch (this.props.UserRole) {
             case 'Guest':
                 return(this.RenderGuestPage ())
             case 'Player':

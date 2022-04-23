@@ -140,28 +140,30 @@ export default class Home extends Component {
         })
 
         // null check on name
-        if(result == null || result === "") return
+        if(result === null || result === "") {
+            this.setState({UserDisplayName: null})
+            return
+        }
 
         // store user name
-        this.setState({
-            UserDisplayName: result
-        })        
-
+        this.setState({UserDisplayName: result})        
 
     }
 
 
     // set player display name
-    SetName = async () => {
+    SubmitNewName = async () => {
 
+        if (this.UserNameInput.current.value === "") {
+            alert("Please enter username")
+            return
+        }
+        
         // show pop over
         this.SetWaiting()
 
-        let newName = this.UserNameInput.value
-
-
         // call smart contract function
-        let result = await this.state.ConnectedContract.methods.SetMyDisplayName()
+        let result = await this.state.ConnectedContract.methods.SetMyDisplayName(this.UserNameInput.current.value)
         .send({
             from: this.state.ConnectedWalletAddr
         }).on('error', async (error) => {
@@ -171,12 +173,13 @@ export default class Home extends Component {
         })
         console.log(result)
     
-    
         // hide pop over
         this.SetIdle()
-  
+        
         // refresh name
-        this.UpdateName()
+        await this.UpdateName()
+        this.SetChangingNameOff()
+        alert("You have set your name to " + this.state.UserDisplayName)
     }
 
 
@@ -247,12 +250,12 @@ export default class Home extends Component {
         // return spinning if still loading
         if (!this.state.ConnectedWalletAddr){//|| this.state.UserRole === "") {
             return (
-                <div style={{height: "100vh"}}>
+                <div id="modulebox" style={{height: "100vh"}}>
                     <Spinner animation="border" role="status">
                     </Spinner>
 
                     <h1>Loading...</h1>
-                    <p>please login to your Metamask wallet and click the blue button above if nothing happens</p>
+                    <p>please login to your Metamask wallet and click the wallet button above if nothing happens</p>
 
                 </div>
             )
@@ -262,11 +265,37 @@ export default class Home extends Component {
         // return page accoding to active page
         switch (this.state.ActivePage) {
             case 'store':
-                return <Store addr={this.state.ConnectedWalletAddr} contract={this.state.ConnectedContract} RenderCards={this.RenderCards}/>
+                return (
+                    <Store 
+                        WalletAddr={this.state.ConnectedWalletAddr} 
+                        ConnectedContract={this.state.ConnectedContract} 
+                        RenderCards={this.RenderCards}
+                        ShowPopup={this.SetWaiting}
+                        HidePopup={this.SetIdle}
+                    />
+                )
             case 'library':
-                return <UserLibrary addr={this.state.ConnectedWalletAddr} contract={this.state.ConnectedContract} role={this.state.UserRole} RenderCards={this.RenderCards}/>
+                return (
+                    <UserLibrary 
+                        WalletAddr={this.state.ConnectedWalletAddr} 
+                        ConnectedContract={this.state.ConnectedContract} 
+                        UserRole={this.state.UserRole} 
+                        RenderCards={this.RenderCards}
+                        ShowPopup={this.SetWaiting}
+                        HidePopup={this.SetIdle}
+                    />
+                )
             case 'p2p':
-                return <P2PMarketplace addr={this.state.ConnectedWalletAddr} contract={this.state.ConnectedContract} RenderCards={this.RenderCards}/>
+                return(
+                    <P2PMarketplace 
+                        WalletAddr={this.state.ConnectedWalletAddr} 
+                        ConnectedContract={this.state.ConnectedContract} 
+                        RenderCards={this.RenderCards}
+                        ShowPopup={this.SetWaiting}
+                        UserRole={this.state.UserRole} 
+                        HidePopup={this.SetIdle}
+                    />
+                )
             default:
                 return <h2>ERROR</h2>
         }
@@ -316,10 +345,12 @@ export default class Home extends Component {
 
     // toggle the waiting model
     SetWaiting = () => {
-        this.setState({IsWaitingForBlockchain: true})
+        console.log("Show waiting modal")
+        this.setState({isWaitingForBlockchain: true})
     }
     SetIdle = () => {
-        this.setState({IsWaitingForBlockchain: false})
+        console.log("Hide waiting modal")
+        this.setState({isWaitingForBlockchain: false})
     }
 
     // toggle the change name model
@@ -344,8 +375,21 @@ export default class Home extends Component {
                 
                 {/* display name */}
                 <OverlayTrigger placement="top" overlay={ <Tooltip id='tooltip-top'>Click to <strong>Reset Display Name</strong>.</Tooltip>}>
-                    <Button id="purplebutton" style={{ fontSize: "16px", marginBottom: "20px", borderRadius: "25px" }} onClick={this.SetChangingName}>{this.state.UserDisplayName === null ? `NoName` : this.state.UserRole}</Button>
+                    <Button id="purplebutton" style={{ fontSize: "16px", marginBottom: "20px", borderRadius: "25px" }} onClick={this.SetChangingName}>{this.state.UserDisplayName === null ? `NoName` : this.state.UserDisplayName}</Button>
                 </OverlayTrigger>
+                <div id="playercard" style={{ background: "rgba(33, 33, 33, 0.8)", display: this.state.isChangingName ? "block" : "none"}}>  
+                    <div style={{margin: "auto"}}>
+                        <h4>Enter New Name</h4>
+                        <p>Maximum 16 characters</p>
+                    </div>
+                    <InputGroup className="mb-3" style={{ marginTop: "20px", marginBottom: "20px"}}>
+                        <FormControl ref={this.UserNameInput} autoFocus maxLength="16" placeholder="New Username"/>
+                        <Button variant="success" onClick={this.SubmitNewName}>Submit</Button>
+                        <Button variant="secondary" onClick={this.SetChangingNameOff}>Cancel</Button>
+                    </InputGroup>
+                </div>
+                
+                
                 <hr />
 
                 {/* wallet connection button */}
@@ -413,28 +457,6 @@ export default class Home extends Component {
                     <p style={{marginTop: "20px", marginBottom: "20px", margin: "auto", padding: "20px"}}>Waiting for Blockchain...</p>
                 
                 </Modal>
-
-
-                {/* waiting pop over */}
-                <Modal
-                    show={this.state.isChangingName}
-                    backdrop="static"
-                    keyboard={false}
-                    size="md"
-                    centered
-                    style={{ background: "rgba(33, 33, 33, 0.8)"}}
-                >  
-                    <div style={{margin: "auto"}}>
-                        <h4>Enter New Name</h4>
-                        <p>Maximum 16 characters</p>
-                    </div>
-                    <InputGroup className="mb-3" style={{ marginTop: "20px", marginBottom: "20px"}}>
-                        <FormControl maxlength="16" placeholder="New Username"/>
-                        <Button variant="primary" onClick={this.SubmitNewName}>Submit</Button>
-                        <Button variant="secondary" onClick={this.SetChangingNameOff}>Cancel</Button>
-                    </InputGroup>
-                </Modal>
-
             </div>
         )
     }

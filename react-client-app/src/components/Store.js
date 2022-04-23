@@ -21,8 +21,10 @@ export default class Store extends Component {
         // wallet address from parent component
         this.state = {
             ConnectedWalletAddr: props.addr,
-            Contract: props.contract,
-            RenderCards: props.RenderCards
+            ConnectedContract: props.contract,
+            RenderCards: props.RenderCards,
+            ShowWaitingPopup: props.ShowPopup,
+            HideWaitingPopup: props.HidePopup
         }
 
     }

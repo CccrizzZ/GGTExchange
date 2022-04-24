@@ -13,10 +13,10 @@ import {
     Form
 
 } from 'react-bootstrap'
-// import { NFTStorage } from 'nft.storage'
 import './Box.css'
 import RetroHitCounter from 'react-retro-hit-counter';
-
+import { NFTStorage, File } from 'nft.storage'
+const client = new NFTStorage({ token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweEUzNzczNjBEYTFBRDlmZkU3ZDg1QjcyQTZBMjk1NEUyN0UzZTI3MDgiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTY1MDgzMjE2MDIwOSwibmFtZSI6IkRldmVsb3BtZW50LWtleSJ9.fBVoPVoh1z3j6OnPmpzTcjFp-o6QibxhCM_-En31IvI' })
 
 export default class UserLibrary extends Component {
     constructor(props) {
@@ -154,7 +154,7 @@ export default class UserLibrary extends Component {
         // get game description, name, and pictures
         let GameName = this.GameTitleInput.current.value
         let GameDescription = this.GameDescInput.current.value
-        let GamePics = this.GamePicsInput
+        let GamePics = this.GamePicsInput.current.files[0]
         let GamePrice = window.web3.utils.toWei(this.GamePriceInput.current.value.toString(), 'ether')
 
         console.log(GameName)
@@ -172,9 +172,19 @@ export default class UserLibrary extends Component {
         // show pop over
         this.props.ShowPopup()
 
+
+        // store description and image on ipfs
+        const metadata = await client.store({
+            name: GameName,
+            description: GameDescription,
+            image: GamePics
+        }) 
+        console.log(metadata)
+
+
         // call smart contract function
         // func(string memory name, uint256 price, string memory URI)
-        let result = await this.props.ConnectedContract.methods.SubmitPitch(GameName, GamePrice, "google.com")
+        const result = await this.props.ConnectedContract.methods.SubmitPitch(GameName, GamePrice, GamePics.url)
         .send({
             from: this.props.WalletAddr
         }).on('error', async (error) => {
@@ -240,7 +250,7 @@ export default class UserLibrary extends Component {
                 return(
                     <tr key={i}>
                         <td>{x.name}</td>
-                        <td>{x.URI}</td>
+                        <td><a href={x.URI} target="_blank" rel="noreferrer">{x.URI}</a></td>
                         <td>{window.web3.utils.fromWei(x.price)}</td>
                         <td>{x.approved.toString()}</td>
                         <td>{x.rejected.toString()}</td>
@@ -309,7 +319,9 @@ export default class UserLibrary extends Component {
 
                 {/* existing pitch */}
                 <h4>My Game Pitch</h4>
-                <Button variant="primary" onClick={this.GetMySubmission}>Refresh</Button>
+                <br />
+                <Button id="purplebutton" onClick={this.GetMySubmission}>Refresh</Button>
+                <hr />
                 <Table style={{border: "2px solid black"}} variant="light" bordered size="sm" striped hover>
                     <thead>
                         <tr>

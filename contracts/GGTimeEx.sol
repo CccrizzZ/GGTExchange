@@ -17,21 +17,13 @@ contract GGTimeEx is ERC721URIStorage {
     Counters.Counter private GIDs;        // game id
 
 
-    // royalties percentage for P2P market
+    // royalties percentage to developer for P2P market 
     uint256 public constant RoyaltiesPercentage = 1;
 
-    // royalties percentage for P2P market
+    // platform percentage on game sales
     uint256 public constant PlatformPercentage = 2;
 
 
-    // P2P market listing
-    // token id and price
-    mapping(uint256 => P2PListing) P2PStoreListing;
-    struct P2PListing {
-        uint256 id;
-        uint256 price;
-        bool sold;  // determines if the item is already sold
-    }
 
 
     // constructor also ERC721's contructor
@@ -62,11 +54,8 @@ contract GGTimeEx is ERC721URIStorage {
     }
 
 
-
-
-
     // map of all users and related functions
-    mapping(address => Roles) public AllUsers ;
+    mapping(address => Roles) AllUsers ;
     // 3 different roles
     enum Roles {
         Guest,
@@ -102,6 +91,7 @@ contract GGTimeEx is ERC721URIStorage {
         string name;
         uint256 price;
         string URI;
+        address publisher;
         bool approved;
         bool rejected;
     }
@@ -114,31 +104,39 @@ contract GGTimeEx is ERC721URIStorage {
         uint256 newID = GIDs.current();
 
         // construct and push new game pitch
-        AllGamePitch[msg.sender].push(GamePitch(newID, name, price, URI, false, false));
+        AllGamePitch[msg.sender].push(GamePitch(newID, name, price, URI, msg.sender, false, false));
 
         return newID;
     }
     function ApproveGameByDevID(address dev, uint256 gid) OnlyAdmin public {
+
+        // approve the pitch
         AllGamePitch[dev][gid].approved = true;
+
+        // list pitch on market place
+        ListNewGame(gid, AllGamePitch[dev][gid].name, AllGamePitch[dev][gid].price, AllGamePitch[dev][gid].URI, AllGamePitch[dev][gid].publisher, true);
+
     }
     function RejectGameByDevID(address dev, uint256 gid) OnlyAdmin public {
         AllGamePitch[dev][gid].rejected = true;
     }
+    function GetMyGamePitch() OnlyDeveloper public view returns(GamePitch[] memory){
+        return AllGamePitch[msg.sender];
+    }
 
 
 
 
 
 
-
-    // sales revenue pending to be claimed
-    // when players buys games they send crypto to this contract
-    // developers can claim it later
-    mapping(address => uint256) PendingSalesRevenue;
     
     // market listing and related functions
     // GID =====> Price
-    mapping(uint256 => Listing) StoreListing;
+    mapping(uint256 => Listing) public StoreListing;
+    
+    // array for all published games
+    Listing[] public StoreListingArray;
+
     struct Listing {
         uint256 GID;
         string name;
@@ -147,51 +145,119 @@ contract GGTimeEx is ERC721URIStorage {
         address publisher;
         bool live; // determines if the sales is alive
     }
+    // function GetAllStoreListing() public view returns(Listing){
+
+    // }
     // called by admin to list game in store
-    function ListNewGame(uint256 GID, string memory name, uint256 price, string memory desc, address publisher, bool live) OnlyAdmin public {
-        StoreListing[GID] = Listing(GID, name, price, desc, publisher, live);
+    function ListNewGame(
+        uint256 GID, 
+        string memory name, 
+        uint256 price, 
+        string memory URI, 
+        address publisher, 
+        bool live
+        ) OnlyAdmin public {
+        StoreListing[GID] = Listing(GID, name, price, URI, publisher, live);
     }
     function IsListingAlive(uint256 GID) public view returns(bool) {
         return StoreListing[GID].live;
     }
     // purchase a listing
-    function BuyGame(address player, uint256 GID) OnlyPlayer public payable {
-        
+    function BuyGame(uint256 GID) OnlyPlayer public payable {
+
         // check if game exist
         require(StoreListing[GID].live == true, "game not found" );
 
         // check if price match
         require(msg.value == StoreListing[GID].price , "amount send does not match amount required");
 
-
-        // mint token to the player
         // increment the counter
         TokenIDs.increment();
 
         // get counter current number
-        uint256 newID = TokenIDs.current();
+        uint256 newTokenID = TokenIDs.current();
 
-        // mint the token to the player and set its uri
-        _mint(player, newID);
-        _setTokenURI(newID, StoreListing[GID].URI);
+        // mint the token to the player 
+        _mint(msg.sender, newTokenID);
+
+        // set token uri
+        _setTokenURI(newTokenID, StoreListing[GID].URI);
+
+        // add revenue to publisher income
+        PendingSalesRevenue[StoreListing[GID].publisher] += msg.value;
 
         // add token id under player token mapping
-        UserLibrary[player].push(newID);
-        PendingSalesRevenue[StoreListing[GID].publisher] += msg.value;
+        AddToLibrary(msg.sender, newTokenID);
+
     }
+
+
+
+    // developers unclaimed revenue
+    mapping(address => uint256) PendingSalesRevenue;
+
+    // developers withdraw income
     function WithdrawRevenue() OnlyDeveloper public {
-        require(PendingSalesRevenue[msg.sender] > 0, "You have nothing to withdraw");
+        require(PendingSalesRevenue[msg.sender] > 0, "No income!");
 
         // 98 percent goto developer and 2 percent goto platform
-        uint256 revenue = PendingSalesRevenue[msg.sender] * (1 - (PlatformPercentage / 100)) ;
-        uint fee = PendingSalesRevenue[msg.sender] * (PlatformPercentage / 100);
+        uint256 fee = PendingSalesRevenue[msg.sender] * PlatformPercentage / 100;
+        uint256 revenue = PendingSalesRevenue[msg.sender] - fee;
 
         // pay the developer and add revenue to tipjar
         payable(msg.sender).transfer(revenue);
         TipJar += fee;
+
+        // clear developer sales revenue
+        PendingSalesRevenue[msg.sender] = 0;
+    }
+
+    function CheckUnclaimedRevenue() OnlyDeveloper public view returns(uint256) {
+        return(PendingSalesRevenue[msg.sender]);
     }
 
 
+
+
+
+
+    // P2P market listing
+    // token id and price
+    mapping(uint256 => P2PListing) public P2PStoreListing;
+    struct P2PListing {
+        uint256 price;
+        address owner;
+        bool sold;  // determines if the item is already sold
+    }
+    function PostP2PListing(uint256 tokenID, uint256 price) OnlyPlayer public {
+        
+        // seller must have the token
+        require(ownerOf(tokenID) == msg.sender, "You do not own it");
+
+        // create listing
+        P2PStoreListing[tokenID] = P2PListing(price, msg.sender, false);
+
+    }
+    function PurchaseP2PListing(uint256 tokenID) OnlyPlayer public payable {
+
+        // price must match the listing price
+        require(msg.value == P2PStoreListing[tokenID].price, "Price must match the listing");
+
+        // check if token sold
+        require(P2PStoreListing[tokenID].sold == false, "Token Sold");
+
+        // send moeny to token owner
+        payable(ownerOf(tokenID)).transfer(msg.value);
+
+        // send token to the buyer
+        _transfer(P2PStoreListing[tokenID].owner, msg.sender, tokenID);
+
+        // set sold to true
+        P2PStoreListing[tokenID].sold = true;
+
+        // push into user token array
+        AddToLibrary(msg.sender ,tokenID);
+    }
 
 
 
@@ -200,8 +266,16 @@ contract GGTimeEx is ERC721URIStorage {
     // (user address ==>> tokenID array)
     mapping(address => uint256[]) UserLibrary;
     // return user library array 
-    function GetTokenArray(address addr) OnlyPlayer public view returns(uint256[] memory) {
-        return(UserLibrary[addr]);
+    function GetPlayerLibrary(address user) OnlyAdmin public view returns(uint256[] memory) {
+        return(UserLibrary[user]);
+    }
+    // return caller library array 
+    function GetMyLibrary() OnlyPlayer public view returns(uint256[] memory) {
+        return(UserLibrary[msg.sender]);
+    }
+    // add token under user name
+    function AddToLibrary(address user, uint256 tokenID) private {
+        UserLibrary[user].push(tokenID);
     }
 
 
@@ -222,9 +296,16 @@ contract GGTimeEx is ERC721URIStorage {
     function CheckTipJar() OnlyAdmin public view returns(uint256) {
         return TipJar;
     }
-
+    
+    // claim platform revenue
     function TouchTipJar() OnlyAdmin public {
+        // require tipjar not empty
         require(TipJar > 0, "Tip jar is empty");
+        
+        // transfer
         payable(owner).transfer(TipJar);
+        
+        // clear tipjar
+        TipJar = 0;
     }
 }

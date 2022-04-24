@@ -6,7 +6,9 @@ import {
     ListGroup, 
     InputGroup, 
     FormControl, 
-    Spinner,
+    Container,
+    Row,
+    Col,
     Table,
     Form
 
@@ -14,6 +16,7 @@ import {
 // import { NFTStorage } from 'nft.storage'
 import './Box.css'
 import Web3 from 'web3'
+import RetroHitCounter from 'react-retro-hit-counter';
 
 
 export default class UserLibrary extends Component {
@@ -23,6 +26,8 @@ export default class UserLibrary extends Component {
         // wallet address from parent component
         this.state = {
             ShowGameSubmitPanel: false,
+            UnclaimedRevenue: null,
+
         }
 
         // refs
@@ -58,7 +63,7 @@ export default class UserLibrary extends Component {
     
     
     
-    RenderLibraryCard = (img) => {
+    RenderPlayerLibraryCard = (img) => {
         return(
             <Card style={{ width: '100%' }}>
                 <Card.Img variant="top" src={img}/>
@@ -101,6 +106,17 @@ export default class UserLibrary extends Component {
 
 
 
+
+
+
+
+
+
+
+
+
+
+    // developer hub
     // show or clsoe developer pitching modal
     ShowGameSubmitModal = () => {
         this.setState({ShowGameSubmitPanel: true})
@@ -119,39 +135,102 @@ export default class UserLibrary extends Component {
 
 
         // get game description, name, and pictures
-        // let GameName = this.GameTitleInput.current.value
+        let GameName = this.GameTitleInput.current.value
         let GameDescription = this.GameDescInput.current.value
-        // let GamePics = this.GamePicsInput.current.value
-        // let GamePrice = this.GamePriceInput.current.value
+        let GamePics = this.GamePicsInput
+        let GamePrice = this.GamePriceInput.current.value
 
-
+        console.log(GameName)
         console.log(GameDescription)
+        console.log(GamePics)
+        console.log(GamePrice)
 
 
-        // if (GameName === "" || GameDescription === "") {
-        //     alert("Please complete the form")
-        //     return
-        // }
+        // null check on input
+        if (GameName === "" || GameDescription === "" || GamePrice === "") {
+            alert("Please complete the form")
+            return
+        }
 
         // show pop over
         this.props.ShowPopup()
 
         // call smart contract function
         // func(string memory name, uint256 price, string memory URI)
-        let result = await this.props.ConnectedContract.methods.SubmitPitch()
+        let result = await this.props.ConnectedContract.methods.SubmitPitch(GameName, GamePrice, "google.com")
         .send({
             from: this.props.WalletAddr
         }).on('error', async (error) => {
             alert("Error: Transaction Failed")
             // hide pop over
-            this.SetIdle()
+            this.props.HidePopup()
         })
         console.log(result)
 
+        alert("Submission success!")
+
         // hide pop over
-        this.HideWaitingPopup()
+        this.props.HidePopup()
+
+        // hide submit panel
+        this.CloseGameSubmitModal()
 
     }
+
+
+
+
+    // pull submission array from smart contract
+    GetMySubmission = async () => {
+
+        // check wallet connection
+        if(this.props.WalletAddr === "" || this.props.WalletAddr === null){
+            alert("Wallet not connected")
+            return
+        }
+
+        
+        // show pop over
+        this.props.ShowPopup()
+
+        // call smart contract function
+        // "0": "tuple(uint256,string,uint256,string,bool,bool)[]: 1,aaa,1,aaaaaaa,false,false"
+        let result = await this.props.ConnectedContract.methods.AllGamePitch(this.prop.WalletAddr)
+        .send({
+            from: this.props.WalletAddr
+        }).on('error', async (error) => {
+            alert("Error: Transaction Failed")
+            // hide pop over
+            this.props.HidePopup()
+        })
+        console.log(result)
+
+        alert("Submission success!")
+
+        // hide pop over
+        this.props.HidePopup()
+    }
+
+
+
+    // render developer submission table
+    RenderMySubmission = () => {
+
+
+        return(
+            <tr>
+                <td>ExampleGame</td>
+                <td>www.google.ca</td>
+                <td>10</td>
+                <td>No</td>
+                <td>No</td>
+                <td>No</td>
+            </tr>
+        )
+    }
+
+
+
 
     // developers submit their games here for admin to review
     RenderDeveloperMintShop = () => {
@@ -159,34 +238,94 @@ export default class UserLibrary extends Component {
             <div id="modulebox" style={{minHeight: '80vh'}}>
                 <h2>Developer Hub</h2>
                 <hr />
+                <Container>
+                    <Row>
+                        <Col id="col2">
+                            <h4>Functions</h4>
+                            <hr/>
+                            <Button id="purplebutton" onClick={this.ShowGameSubmitModal}>Submit New Game</Button>
+                            <br/>
+                            <Button id="purplebutton" onClick={this.ShowGameSubmitModal}>Claim</Button>
+                        </Col>
+                        <Col id="col2">
+                            <h4>Unclaimed Sales Revenue</h4>
+                            <hr/>
+
+                            <RetroHitCounter
+                                hits={this.state.UnclaimedRevenue==null ? 0 : this.state.UnclaimedRevenue}
+                                withBorder={true}
+                                withGlow={true}
+                                minLength={19}
+                                size={25}
+                                padding={4}
+                                digitSpacing={3}
+                                segmentThickness={4}
+                                segmentSpacing={0.5}
+                                segmentActiveColor="#76FF03"
+                                segmentInactiveColor="#315324"
+                                backgroundColor="#222222"
+                                borderThickness={7}
+                                glowStrength={0.5}
+                                glowSize={4}
+                            />
+                            <hr/>
+                            <p>Revenue calculated in wei</p>
+                            <p>1 Wei = 1 Eth(10)<sup>-18</sup></p>
+                        </Col>
+                    </Row>
+                </Container>
+                <hr/>
+                
+
+
+
+                {/* existing pitch */}
+                <h4>My Game Pitch</h4>
+                <Table style={{border: "2px solid black"}} variant="light" bordered size="sm" striped hover>
+                    <thead>
+                        <tr>
+                            <th>Game Name</th>
+                            <th>IPFS URL</th>
+                            <th>Price</th>
+                            <th>Approved</th>
+                            <th>Rejected</th>
+                            <th>Available in Store</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {this.RenderMySubmission()}
+                    </tbody>
+                </Table>
+
+
+
 
                 {/* upload panel for developers */}
                 <Modal
                     show={this.state.ShowGameSubmitPanel}
-                    onHide={this.state.CloseGameSubmitModal}
                     backdrop="static"
                     keyboard={false}
                 >
-                    <Modal.Header closeButton>
-                        <Modal.Title>Submit Game</Modal.Title>
+                    <Modal.Header>
+                        <Modal.Title>💾 Submit Pitch</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
                         <Form>
                             <Form.Group className="mb-3">
-                                <Form.Label>Game title:</Form.Label>
-                                <Form.Control ref={this.GameTitleInput} type="text" placeholder="Normal text" />
+                                <Form.Label>🎮 Game title:</Form.Label>
+                                <Form.Control ref={this.GameTitleInput} type="text" placeholder="Enter your game title" />
                             </Form.Group>
                             <Form.Group className="mb-3">
-                                <Form.Label>Game Description:</Form.Label>
-                                <Form.Control ref={this.GameDescInput}  id="game_desc" as="textarea" rows={3} />
+                                <Form.Label>🧾 Game Description:</Form.Label>
+                                <Form.Control ref={this.GameDescInput} placeholder="Enter your game description" as="textarea" rows={3} />
                             </Form.Group>
                             <Form.Group className="mb-3">
-                                <Form.Label>Demo Pictures</Form.Label>
+                                <Form.Label>📂 Demo Pictures (a single picture that contains everything)</Form.Label>
                                 <Form.Control ref={this.GamePicsInput} type="file" size="sm" />
                             </Form.Group>
                             <Form.Group className="mb-3">
-                                <Form.Label>Your Price (in DEV):</Form.Label>
-                                <Form.Control ref={this.GamePrice} type="number" placeholder="Normal text" />
+                                <Form.Label>💰 Your Price (in DEV):</Form.Label>
+                                <Form.Control ref={this.GamePriceInput} type="number" placeholder="Enter 0 if you want it to be free" />
                             </Form.Group>
                         </Form>
                     </Modal.Body>
@@ -195,17 +334,7 @@ export default class UserLibrary extends Component {
                         <Button variant="primary" onClick={this.SubmitPitch}>Submit</Button>
                     </Modal.Footer>
                 </Modal>
-                            
-                
-                {/* existing uploads (pitch) */}
-                <h4>My Game Pitch</h4>
-                <hr/>
-
-                <Button variant="primary" onClick={this.ShowGameSubmitModal}>Submit New Game</Button>
-                <div id="griddisplay">
-
-
-                </div>
+    
             </div>
         )
     }
@@ -228,7 +357,54 @@ export default class UserLibrary extends Component {
             </div>
         )
     }
-    
+    ApproveRejectPitch = async (pass) => {
+
+        // show pop over
+        this.props.ShowPopup()
+        if (pass) {
+            
+
+            // call smart contract function
+            // func(string memory name, uint256 price, string memory URI)
+            let result = await this.props.ConnectedContract.methods.SubmitPitch()
+            .send({
+                from: this.props.WalletAddr
+            }).on('error', async (error) => {
+                alert("Error: Transaction Failed")
+                // hide pop over
+                this.props.HidePopup()
+            })
+            console.log(result)
+
+            alert("Submission approved!")
+
+            
+            
+        }else{
+            
+            
+            // call smart contract function
+            // func(string memory name, uint256 price, string memory URI)
+            let result = await this.props.ConnectedContract.methods.SubmitPitch()
+            .send({
+                from: this.props.WalletAddr
+            }).on('error', async (error) => {
+                alert("Error: Transaction Failed")
+                // hide pop over
+                this.props.HidePopup()
+            })
+            console.log(result)
+            
+            
+            
+            alert("Submission approved!")
+            
+        }
+        // hide pop over
+        this.props.HidePopup()
+
+
+    }
 
 
 

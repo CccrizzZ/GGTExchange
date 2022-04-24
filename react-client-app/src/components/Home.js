@@ -24,7 +24,6 @@ import ContractABI from './ContractABI.json'
 import './Box.css'
 
 
-
 // role from smart contract
 // 0 Guest
 // 1 Player
@@ -44,7 +43,7 @@ export default class Home extends Component {
             ConnectedContract: null,
             UserRole: null,
             TargetContract: null,
-            ActivePage: 'store',
+            ActivePage: 'library',
             UserDisplayName: null,
             isWaitingForBlockchain: false,
             isChangingName: false,
@@ -102,7 +101,6 @@ export default class Home extends Component {
 
 
 
-
     // update user role from smart contract
     UpdateRole = async () => {
 
@@ -153,6 +151,7 @@ export default class Home extends Component {
 
     // set player display name
     SubmitNewName = async () => {
+
 
         if (this.UserNameInput.current.value === "") {
             alert("Please enter username")
@@ -355,6 +354,13 @@ export default class Home extends Component {
 
     // toggle the change name model
     SetChangingName = () => {
+
+        // if no wallet connect user cannot change name
+        if (this.state.ConnectedWalletAddr === null || this.state.ConnectedWalletAddr === ""){
+            alert("Please connect wallet first")
+            return 
+        }
+
         this.setState({isChangingName: true})
     }
     SetChangingNameOff = () => {

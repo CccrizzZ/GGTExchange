@@ -3,7 +3,7 @@
 {
     border: 2px solid black;
     border-radius: 25px;
-    width: 80%;
+    width: 62%;
     min-width: 1000px; 
     margin: auto;
     padding: 20px; 
@@ -48,4 +48,17 @@
 #purplebutton{
     background-color:#8D12C1;
     border: 2px solid black;
+}
+
+#col2{
+    background: rgba(33, 33, 33, 0.8);
+    border-radius: 25px;
+    border: 2px solid black;
+    padding: 20px;
+    margin: 10px;
+    min-width: 200px;
+}
+
+#col2 > Button{
+    margin: inherit;
 }

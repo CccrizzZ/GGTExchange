@@ -38,7 +38,7 @@ export default class Home extends Component {
         super(props)
 
         this.state = {
-            TargetContractAddr: '0xEF998a565f29A77C66F45a8347aD10Bc9124c754',
+            TargetContractAddr: '0x1dEe4F05fE08aA3Cad506AF87f0742B7E73Ddf52',
             ConnectedWalletAddr: null,
             ConnectedContract: null,
             UserRole: null,
@@ -445,7 +445,7 @@ export default class Home extends Component {
 
 
                 {/* render app */}
-                {this.RenderHome()}
+                {this.state.UserRole == null? null: this.RenderHome()}
 
                 
                 {/* waiting pop over */}

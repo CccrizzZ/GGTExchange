@@ -131,12 +131,13 @@ contract GGTimeEx is ERC721URIStorage {
 
     
     // market listing and related functions
-    // GID =====> Price
-    mapping(uint256 => Listing) public StoreListing;
-    
-    // array for all published games
-    Listing[] public StoreListingArray;
+    // array of all game published
+    Listing[] public StoreListing;
 
+    // mapping of game id ==== listing
+    mapping(uint256 => Listing) public GIDListing;
+
+    // listing struct
     struct Listing {
         uint256 GID;
         string name;
@@ -145,31 +146,32 @@ contract GGTimeEx is ERC721URIStorage {
         address publisher;
         bool live; // determines if the sales is alive
     }
-    // function GetAllStoreListing() public view returns(Listing){
 
-    // }
+    // return all store listings
+    function GetAllStoreListing() public view returns(Listing[] memory){
+        return StoreListing;
+    }
+    function IsLive(uint256 GID) public view returns(bool){
+        return GIDListing[GID].live;
+    }
     // called by admin to list game in store
-    function ListNewGame(
-        uint256 GID, 
-        string memory name, 
-        uint256 price, 
-        string memory URI, 
-        address publisher, 
-        bool live
-        ) OnlyAdmin public {
-        StoreListing[GID] = Listing(GID, name, price, URI, publisher, live);
+    function ListNewGame(uint256 GID, string memory name, uint256 price, string memory URI, address publisher, bool live) OnlyAdmin public {
+        
+        // push into store listing
+        StoreListing.push(Listing(GID, name, price, URI, publisher, live));
+
+        // push into gid mapping
+        GIDListing[GID] = Listing(GID, name, price, URI, publisher, live);
     }
-    function IsListingAlive(uint256 GID) public view returns(bool) {
-        return StoreListing[GID].live;
-    }
+
     // purchase a listing
     function BuyGame(uint256 GID) OnlyPlayer public payable {
 
         // check if game exist
-        require(StoreListing[GID].live == true, "game not found" );
+        require(GIDListing[GID].live == true, "game not found" );
 
         // check if price match
-        require(msg.value == StoreListing[GID].price , "amount send does not match amount required");
+        require(msg.value == GIDListing[GID].price , "amount send does not match amount required");
 
         // increment the counter
         TokenIDs.increment();
@@ -181,15 +183,16 @@ contract GGTimeEx is ERC721URIStorage {
         _mint(msg.sender, newTokenID);
 
         // set token uri
-        _setTokenURI(newTokenID, StoreListing[GID].URI);
+        _setTokenURI(newTokenID, GIDListing[GID].URI);
 
         // add revenue to publisher income
-        PendingSalesRevenue[StoreListing[GID].publisher] += msg.value;
+        PendingSalesRevenue[GIDListing[GID].publisher] += msg.value;
 
         // add token id under player token mapping
         AddToLibrary(msg.sender, newTokenID);
 
     }
+
 
 
 
@@ -224,7 +227,14 @@ contract GGTimeEx is ERC721URIStorage {
     // P2P market listing
     // token id and price
     mapping(uint256 => P2PListing) public P2PStoreListing;
+
+
+    // array for all p2p listings
+    P2PListing[] public AllP2PListing;
+
+
     struct P2PListing {
+        uint256 tokenID;
         uint256 price;
         address owner;
         bool sold;  // determines if the item is already sold
@@ -234,8 +244,11 @@ contract GGTimeEx is ERC721URIStorage {
         // seller must have the token
         require(ownerOf(tokenID) == msg.sender, "You do not own it");
 
-        // create listing
-        P2PStoreListing[tokenID] = P2PListing(price, msg.sender, false);
+        // store in mapping
+        P2PStoreListing[tokenID] = P2PListing(tokenID, price, msg.sender, false);
+
+        // store in array
+        AllP2PListing.push(P2PListing(tokenID, price, msg.sender, false));
 
     }
     function PurchaseP2PListing(uint256 tokenID) OnlyPlayer public payable {
@@ -257,6 +270,12 @@ contract GGTimeEx is ERC721URIStorage {
 
         // push into user token array
         AddToLibrary(msg.sender ,tokenID);
+    }
+    function GetAllP2PListing() public view returns(P2PListing[] memory){
+        return AllP2PListing;
+    }
+    function IsSold(uint256 tokenID) public view returns(bool) {
+        return P2PStoreListing[tokenID].sold;
     }
 
 

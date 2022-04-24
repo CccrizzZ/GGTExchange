@@ -93,11 +93,6 @@
 	{
 		"inputs": [
 			{
-				"internalType": "address",
-				"name": "player",
-				"type": "address"
-			},
-			{
 				"internalType": "uint256",
 				"name": "GID",
 				"type": "uint256"
@@ -127,7 +122,7 @@
 			},
 			{
 				"internalType": "string",
-				"name": "desc",
+				"name": "URI",
 				"type": "string"
 			},
 			{
@@ -144,6 +139,37 @@
 		"name": "ListNewGame",
 		"outputs": [],
 		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenID",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "price",
+				"type": "uint256"
+			}
+		],
+		"name": "PostP2PListing",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenID",
+				"type": "uint256"
+			}
+		],
+		"name": "PurchaseP2PListing",
+		"outputs": [],
+		"stateMutability": "payable",
 		"type": "function"
 	},
 	{
@@ -372,17 +398,32 @@
 	{
 		"inputs": [
 			{
-				"internalType": "address",
+				"internalType": "uint256",
 				"name": "",
-				"type": "address"
+				"type": "uint256"
 			}
 		],
-		"name": "AllUsers",
+		"name": "AllP2PListing",
 		"outputs": [
 			{
-				"internalType": "enum GGTimeEx.Roles",
-				"name": "",
-				"type": "uint8"
+				"internalType": "uint256",
+				"name": "tokenID",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "price",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"internalType": "bool",
+				"name": "sold",
+				"type": "bool"
 			}
 		],
 		"stateMutability": "view",
@@ -415,6 +456,99 @@
 				"internalType": "uint256",
 				"name": "",
 				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "CheckUnclaimedRevenue",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "GetAllP2PListing",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "uint256",
+						"name": "tokenID",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "price",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "owner",
+						"type": "address"
+					},
+					{
+						"internalType": "bool",
+						"name": "sold",
+						"type": "bool"
+					}
+				],
+				"internalType": "struct GGTimeEx.P2PListing[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "GetAllStoreListing",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "uint256",
+						"name": "GID",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "name",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "price",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "URI",
+						"type": "string"
+					},
+					{
+						"internalType": "address",
+						"name": "publisher",
+						"type": "address"
+					},
+					{
+						"internalType": "bool",
+						"name": "live",
+						"type": "bool"
+					}
+				],
+				"internalType": "struct GGTimeEx.Listing[]",
+				"name": "",
+				"type": "tuple[]"
 			}
 		],
 		"stateMutability": "view",
@@ -454,12 +588,94 @@
 	},
 	{
 		"inputs": [],
+		"name": "GetMyGamePitch",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "uint256",
+						"name": "GID",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "name",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "price",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "URI",
+						"type": "string"
+					},
+					{
+						"internalType": "address",
+						"name": "publisher",
+						"type": "address"
+					},
+					{
+						"internalType": "bool",
+						"name": "approved",
+						"type": "bool"
+					},
+					{
+						"internalType": "bool",
+						"name": "rejected",
+						"type": "bool"
+					}
+				],
+				"internalType": "struct GGTimeEx.GamePitch[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "GetMyLibrary",
+		"outputs": [
+			{
+				"internalType": "uint256[]",
+				"name": "",
+				"type": "uint256[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
 		"name": "GetMyRole",
 		"outputs": [
 			{
 				"internalType": "enum GGTimeEx.Roles",
 				"name": "",
 				"type": "uint8"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "GetPlayerLibrary",
+		"outputs": [
+			{
+				"internalType": "uint256[]",
+				"name": "",
+				"type": "uint256[]"
 			}
 		],
 		"stateMutability": "view",
@@ -487,17 +703,42 @@
 	{
 		"inputs": [
 			{
-				"internalType": "address",
-				"name": "addr",
-				"type": "address"
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
 			}
 		],
-		"name": "GetTokenArray",
+		"name": "GIDListing",
 		"outputs": [
 			{
-				"internalType": "uint256[]",
-				"name": "",
-				"type": "uint256[]"
+				"internalType": "uint256",
+				"name": "GID",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "price",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "URI",
+				"type": "string"
+			},
+			{
+				"internalType": "address",
+				"name": "publisher",
+				"type": "address"
+			},
+			{
+				"internalType": "bool",
+				"name": "live",
+				"type": "bool"
 			}
 		],
 		"stateMutability": "view",
@@ -535,7 +776,26 @@
 				"type": "uint256"
 			}
 		],
-		"name": "IsListingAlive",
+		"name": "IsLive",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenID",
+				"type": "uint256"
+			}
+		],
+		"name": "IsSold",
 		"outputs": [
 			{
 				"internalType": "bool",
@@ -592,6 +852,40 @@
 		"type": "function"
 	},
 	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "P2PStoreListing",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenID",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "price",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"internalType": "bool",
+				"name": "sold",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"inputs": [],
 		"name": "PlatformPercentage",
 		"outputs": [
@@ -612,6 +906,50 @@
 				"internalType": "uint256",
 				"name": "",
 				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "StoreListing",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "GID",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "price",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "URI",
+				"type": "string"
+			},
+			{
+				"internalType": "address",
+				"name": "publisher",
+				"type": "address"
+			},
+			{
+				"internalType": "bool",
+				"name": "live",
+				"type": "bool"
 			}
 		],
 		"stateMutability": "view",

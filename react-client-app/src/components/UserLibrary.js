@@ -15,7 +15,6 @@ import {
 } from 'react-bootstrap'
 // import { NFTStorage } from 'nft.storage'
 import './Box.css'
-import Web3 from 'web3'
 import RetroHitCounter from 'react-retro-hit-counter';
 
 
@@ -27,7 +26,10 @@ export default class UserLibrary extends Component {
         this.state = {
             ShowGameSubmitPanel: false,
             UnclaimedRevenue: null,
-
+            StoreListing: null,
+            MySubmissionListing: null,
+            MyIncome: null,
+            AdminSubmissionListing: null
         }
 
         // refs
@@ -37,6 +39,35 @@ export default class UserLibrary extends Component {
         this.GamePriceInput = React.createRef()
         
     }
+    
+    
+
+    async componentDidMount(){
+
+
+
+        // init according to user role
+        switch (this.props.UserRole) {
+            case 'Developer':
+                console.log("Developer init")
+                await this.GetMySubmission()
+                break;
+            case 'Guest':
+                console.log("Guest init")
+                break;
+            case 'Player':
+                console.log("Player init")
+                break;
+            case 'Admin':
+                console.log("Admin init")
+                break;
+            default:
+                break;
+        }
+
+    }
+
+
 
 
     // verify ownership with smart contract
@@ -106,16 +137,6 @@ export default class UserLibrary extends Component {
 
 
 
-
-
-
-
-
-
-
-
-
-
     // developer hub
     // show or clsoe developer pitching modal
     ShowGameSubmitModal = () => {
@@ -130,15 +151,11 @@ export default class UserLibrary extends Component {
     // if approved it will be listed on the marketplace
     SubmitPitch = async () => {
 
-        // null check for inputs
-        // if(this.GameDescInput.value == "")
-
-
         // get game description, name, and pictures
         let GameName = this.GameTitleInput.current.value
         let GameDescription = this.GameDescInput.current.value
         let GamePics = this.GamePicsInput
-        let GamePrice = this.GamePriceInput.current.value
+        let GamePrice = window.web3.utils.toWei(this.GamePriceInput.current.value.toString(), 'ether')
 
         console.log(GameName)
         console.log(GameDescription)
@@ -178,8 +195,6 @@ export default class UserLibrary extends Component {
     }
 
 
-
-
     // pull submission array from smart contract
     GetMySubmission = async () => {
 
@@ -195,17 +210,15 @@ export default class UserLibrary extends Component {
 
         // call smart contract function
         // "0": "tuple(uint256,string,uint256,string,bool,bool)[]: 1,aaa,1,aaaaaaa,false,false"
-        let result = await this.props.ConnectedContract.methods.AllGamePitch(this.prop.WalletAddr)
-        .send({
-            from: this.props.WalletAddr
-        }).on('error', async (error) => {
-            alert("Error: Transaction Failed")
-            // hide pop over
-            this.props.HidePopup()
+        let result = await this.props.ConnectedContract.methods.GetMyGamePitch()
+        .call({
+            from: this.props.WalletAddr 
         })
+
         console.log(result)
 
-        alert("Submission success!")
+        // store submission listing in state
+        this.setState({ MySubmissionListing: result })
 
         // hide pop over
         this.props.HidePopup()
@@ -215,21 +228,36 @@ export default class UserLibrary extends Component {
 
     // render developer submission table
     RenderMySubmission = () => {
-
-
+        // gname
+        // uri
+        // price
+        // approved = false
+        // rejected
+        // live
+        if(this.props.UserRole === "Developer")
         return(
-            <tr>
-                <td>ExampleGame</td>
-                <td>www.google.ca</td>
-                <td>10</td>
-                <td>No</td>
-                <td>No</td>
-                <td>No</td>
-            </tr>
+            this.state.MySubmissionListing.map((x, i) => {
+                return(
+                    <tr key={i}>
+                        <td>{x.name}</td>
+                        <td>{x.URI}</td>
+                        <td>{window.web3.utils.fromWei(x.price)}</td>
+                        <td>{x.approved.toString()}</td>
+                        <td>{x.rejected.toString()}</td>
+                        <td>false</td>
+                    </tr>
+                )
+            } )
         )
+        
+        
     }
 
 
+    // developer claim income
+    ClaimIncome = () => {
+
+    }
 
 
     // developers submit their games here for admin to review
@@ -245,7 +273,7 @@ export default class UserLibrary extends Component {
                             <hr/>
                             <Button id="purplebutton" onClick={this.ShowGameSubmitModal}>Submit New Game</Button>
                             <br/>
-                            <Button id="purplebutton" onClick={this.ShowGameSubmitModal}>Claim</Button>
+                            <Button id="purplebutton" onClick={this.ClaimIncome}>Claim</Button>
                         </Col>
                         <Col id="col2">
                             <h4>Unclaimed Sales Revenue</h4>
@@ -281,6 +309,7 @@ export default class UserLibrary extends Component {
 
                 {/* existing pitch */}
                 <h4>My Game Pitch</h4>
+                <Button variant="primary" onClick={this.GetMySubmission}>Refresh</Button>
                 <Table style={{border: "2px solid black"}} variant="light" bordered size="sm" striped hover>
                     <thead>
                         <tr>
@@ -293,7 +322,8 @@ export default class UserLibrary extends Component {
                         </tr>
                     </thead>
                     <tbody>
-                        {this.RenderMySubmission()}
+                        {this.state.MySubmissionListing == null ? null : this.RenderMySubmission()}
+
                     </tbody>
                 </Table>
 
@@ -352,11 +382,40 @@ export default class UserLibrary extends Component {
             <div id="modulebox">
                 <h2>Admin Hub</h2>
                 <hr />
+                <Container>
+                    <Row>
+                        <Col id="col2">
 
+                        </Col>
+                        <Col id="col2">
 
+                        </Col>
+                    </Row>
+                </Container>
+                <hr />
+
+                <h4>My Game Pitch</h4>
+                <Table style={{border: "2px solid black"}} variant="light" bordered size="sm" striped hover>
+                    <thead>
+                        <tr>
+                            <th>Game Name</th>
+                            <th>IPFS URL</th>
+                            <th>Price</th>
+                            <th>Approved</th>
+                            <th>Rejected</th>
+                            <th>Available in Store</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {this.RenderMySubmission()}
+                    </tbody>
+                </Table>
             </div>
         )
     }
+
+
+    // admin approve or reject pitch
     ApproveRejectPitch = async (pass) => {
 
         // show pop over
@@ -405,13 +464,6 @@ export default class UserLibrary extends Component {
 
 
     }
-
-
-
-
-
-
-
 
 
 

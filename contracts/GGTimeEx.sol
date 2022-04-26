@@ -10,11 +10,17 @@ contract GGTimeEx is ERC721URIStorage {
     // owner address
     address public owner;
 
-
-    // counter utility for erc721
+    // counter utility form erc721
     using Counters for Counters.Counter;
-    Counters.Counter public TokenIDs;    // token id
-    Counters.Counter private GIDs;        // game id
+
+    // token id for game ownership token
+    // is incremented when token minted
+    Counters.Counter public TokenIDs;
+
+
+    // game pitch id
+    // is incremented when new game submitted
+    Counters.Counter private GIDs;
 
 
     // royalties percentage to developer for P2P market 
@@ -84,7 +90,10 @@ contract GGTimeEx is ERC721URIStorage {
 
 
     // map of all submitted games
-    mapping(address => GamePitch[]) AllGamePitch;
+    mapping(address => GamePitch[]) GamePitchMap;
+    
+    // array for all game pitch
+    GamePitch[] AllGamePitch;
     // developer pitch data
     struct GamePitch {
         uint256 GID;
@@ -103,25 +112,29 @@ contract GGTimeEx is ERC721URIStorage {
         // get counter current number
         uint256 newID = GIDs.current();
 
-        // construct and push new game pitch
-        AllGamePitch[msg.sender].push(GamePitch(newID, name, price, URI, msg.sender, false, false));
+        // store in game pitch mapping 
+        GamePitchMap[msg.sender].push(GamePitch(newID, name, price, URI, msg.sender, false, false));
 
+        // store in all game pitch array
+        AllGamePitch.push(GamePitch(newID, name, price, URI, msg.sender, false, false));
+
+        // return submitted gid
         return newID;
     }
     function ApproveGameByDevID(address dev, uint256 gid) OnlyAdmin public {
 
         // approve the pitch
-        AllGamePitch[dev][gid].approved = true;
+        GamePitchMap[dev][gid].approved = true;
 
         // list pitch on market place
-        ListNewGame(gid, AllGamePitch[dev][gid].name, AllGamePitch[dev][gid].price, AllGamePitch[dev][gid].URI, AllGamePitch[dev][gid].publisher, true);
+        ListNewGame(gid, GamePitchMap[dev][gid].name, GamePitchMap[dev][gid].price, GamePitchMap[dev][gid].URI, GamePitchMap[dev][gid].publisher, true);
 
     }
     function RejectGameByDevID(address dev, uint256 gid) OnlyAdmin public {
-        AllGamePitch[dev][gid].rejected = true;
+        GamePitchMap[dev][gid].rejected = true;
     }
     function GetMyGamePitch() OnlyDeveloper public view returns(GamePitch[] memory){
-        return AllGamePitch[msg.sender];
+        return GamePitchMap[msg.sender];
     }
 
 

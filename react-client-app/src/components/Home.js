@@ -38,7 +38,7 @@ export default class Home extends Component {
         super(props)
 
         this.state = {
-            TargetContractAddr: '0x1dEe4F05fE08aA3Cad506AF87f0742B7E73Ddf52',
+            TargetContractAddr: '0x6BD17918C8D0A756c3631Ec18E1B338BdD83c944',
             ConnectedWalletAddr: null,
             ConnectedContract: null,
             UserRole: null,

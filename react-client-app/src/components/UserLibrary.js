@@ -15,7 +15,7 @@ import {
 } from 'react-bootstrap'
 import './Box.css'
 import RetroHitCounter from 'react-retro-hit-counter';
-import { NFTStorage, File } from 'nft.storage'
+import { NFTStorage } from 'nft.storage'
 const client = new NFTStorage({ token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweEUzNzczNjBEYTFBRDlmZkU3ZDg1QjcyQTZBMjk1NEUyN0UzZTI3MDgiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTY1MDgzMjE2MDIwOSwibmFtZSI6IkRldmVsb3BtZW50LWtleSJ9.fBVoPVoh1z3j6OnPmpzTcjFp-o6QibxhCM_-En31IvI' })
 
 export default class UserLibrary extends Component {
@@ -27,9 +27,11 @@ export default class UserLibrary extends Component {
             ShowGameSubmitPanel: false,
             UnclaimedRevenue: null,
             StoreListing: null,
-            MySubmissionListing: null,
+            DevSubmissionListing: null,
             MyIncome: null,
-            AdminSubmissionListing: null
+            AdminAllSubmissionListing: null,
+            AdminTipjar: null,
+            AdminAllGamePitch: null
         }
 
         // refs
@@ -43,8 +45,6 @@ export default class UserLibrary extends Component {
     
 
     async componentDidMount(){
-
-
 
         // init according to user role
         switch (this.props.UserRole) {
@@ -60,6 +60,7 @@ export default class UserLibrary extends Component {
                 break;
             case 'Admin':
                 console.log("Admin init")
+                await this.GetAllPitch()
                 break;
             default:
                 break;
@@ -127,7 +128,6 @@ export default class UserLibrary extends Component {
                 <hr />
 
                 <div id="griddisplay">
-                    {this.state.RenderCards("http://media.steampowered.com/apps/csgo/blog/images/fb_image.png?v=6")}
                 </div>
 
             </div>
@@ -173,7 +173,7 @@ export default class UserLibrary extends Component {
         this.props.ShowPopup()
 
 
-        // store description and image on ipfs
+        // store description and image on ipfs storage
         const metadata = await client.store({
             name: GameName,
             description: GameDescription,
@@ -184,7 +184,7 @@ export default class UserLibrary extends Component {
 
         // call smart contract function
         // func(string memory name, uint256 price, string memory URI)
-        const result = await this.props.ConnectedContract.methods.SubmitPitch(GameName, GamePrice, GamePics.url)
+        const result = await this.props.ConnectedContract.methods.SubmitPitch(GameName, GamePrice, metadata.url)
         .send({
             from: this.props.WalletAddr
         }).on('error', async (error) => {
@@ -195,7 +195,7 @@ export default class UserLibrary extends Component {
         console.log(result)
 
         alert("Submission success!")
-
+        
         // hide pop over
         this.props.HidePopup()
 
@@ -228,7 +228,7 @@ export default class UserLibrary extends Component {
         console.log(result)
 
         // store submission listing in state
-        this.setState({ MySubmissionListing: result })
+        this.setState({ DevSubmissionListing: result })
 
         // hide pop over
         this.props.HidePopup()
@@ -244,13 +244,17 @@ export default class UserLibrary extends Component {
         // approved = false
         // rejected
         // live
-        if(this.props.UserRole === "Developer")
+        if(this.props.UserRole !== "Developer") return
+
+        
+        // ipfs://bafyreihwlk5ab2gbmrxet4oorugopvzowqnf4ulq6ztxqztp74gdlcg6ee/metadata.json
+
         return(
-            this.state.MySubmissionListing.map((x, i) => {
+            this.state.DevSubmissionListing.map((x, i) => {
                 return(
                     <tr key={i}>
                         <td>{x.name}</td>
-                        <td><a href={x.URI} target="_blank" rel="noreferrer">{x.URI}</a></td>
+                        <td><a id="wrapAnchor" href={x.URI} target="_blank" rel="noreferrer">{x.URI}</a></td>
                         <td>{window.web3.utils.fromWei(x.price)}</td>
                         <td>{x.approved.toString()}</td>
                         <td>{x.rejected.toString()}</td>
@@ -264,9 +268,47 @@ export default class UserLibrary extends Component {
     }
 
 
-    // developer claim income
-    ClaimIncome = () => {
+    GetUnclaimedIncomeAmount = async () => {
+        // show pop over
+        this.props.ShowPopup()
 
+        // call contract
+        let result = await this.props.ConnectedContract.methods.CheckUnclaimedRevenue()
+        .call({
+            from: this.props.WalletAddr 
+        })
+        
+        // hide pop over
+        this.props.HidePopup()
+        
+        // store to state
+        this.setState({UnclaimedRevenue: result})
+    }
+
+
+    // developer claim income
+    ClaimIncome = async () => {
+
+        // show pop over
+        this.props.ShowPopup()
+
+        // call smart constract
+        const result = await this.props.ConnectedContract.methods.WithdrawRevenue()
+        .send({
+            from: this.props.WalletAddr
+        }).on('error', async (error) => {
+            alert("Error: Transaction Failed")
+            // hide pop over
+            this.props.HidePopup()
+        })
+        console.log(result)
+
+        
+        // refresh unclaimed income counter
+        this.GetUnclaimedIncomeAmount()
+        
+        // hide pop over
+        this.props.HidePopup()
     }
 
 
@@ -283,7 +325,7 @@ export default class UserLibrary extends Component {
                             <hr/>
                             <Button id="purplebutton" onClick={this.ShowGameSubmitModal}>Submit New Game</Button>
                             <br/>
-                            <Button id="purplebutton" onClick={this.ClaimIncome}>Claim</Button>
+                            <Button id="purplebutton" onClick={this.ClaimIncome}>Claim Sales </Button>
                         </Col>
                         <Col id="col2">
                             <h4>Unclaimed Sales Revenue</h4>
@@ -322,20 +364,19 @@ export default class UserLibrary extends Component {
                 <br />
                 <Button id="purplebutton" onClick={this.GetMySubmission}>Refresh</Button>
                 <hr />
-                <Table style={{border: "2px solid black"}} variant="light" bordered size="sm" striped hover>
+                <Table style={{border: "2px solid black", marginLeft:"auto", marginRight:"auto"}} variant="warning" bordered size="sm" striped hover>
                     <thead>
                         <tr>
                             <th>Game Name</th>
                             <th>IPFS URL</th>
-                            <th>Price</th>
+                            <th>Price (GLMR)</th>
                             <th>Approved</th>
                             <th>Rejected</th>
                             <th>Available in Store</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {this.state.MySubmissionListing == null ? null : this.RenderMySubmission()}
-
+                        {this.state.DevSubmissionListing == null ? null : this.RenderMySubmission()}
                     </tbody>
                 </Table>
 
@@ -388,6 +429,144 @@ export default class UserLibrary extends Component {
 
 
 
+
+
+
+
+
+
+
+    GetAllPitch = async () => {
+        // show pop over
+        this.props.ShowPopup()
+        
+        // call contract
+        let result = await this.props.ConnectedContract.methods.GetAllGamePitch()
+        .call({
+            from: this.props.WalletAddr 
+        })
+
+        console.log(result)
+
+        // store to state
+        this.setState({AdminAllGamePitch: result})
+    
+        // hide pop over
+        this.props.HidePopup()
+    }
+
+
+    // render all game pitch for admin
+    RenderAllPitch = () => {
+        if(this.props.UserRole !== "Admin") return
+
+
+        return(
+            this.state.AdminAllGamePitch.map((x, i) => {
+                return(
+                    <tr key={i}>
+                        <td>{x.name}</td>
+                        <td><a id="wrapAnchor" href={x.URI} target="_blank" rel="noreferrer">{x.URI}</a></td>
+                        <td>{window.web3.utils.fromWei(x.price)}</td>
+                        <td>{x.approved.toString()}</td>
+                        <td>{x.rejected.toString()}</td>
+                        <td>false</td>
+                    </tr>
+                )
+            } )
+        )
+        
+    }
+
+
+    // approve or reject certain pitch
+    ApproveRejectPitch = async (address, gid, pass) => {
+
+        // show pop over
+        this.props.ShowPopup()
+
+        // approve or reject
+        if (pass) {
+
+            // approve
+            let result = await this.props.ConnectedContract.methods.ApproveGameByDevID(address, gid)
+            .send({
+                from: this.props.WalletAddr
+            }).on('error', async (error) => {
+                alert("Error: Transaction Failed")
+                // hide pop over
+                this.props.HidePopup()
+            })
+            console.log(result)
+            alert("Pitch Approved!")
+            
+        }else{
+            
+            // reject
+            let result = await this.props.ConnectedContract.methods.RejectGameByDevID(address, gid)
+            .send({
+                from: this.props.WalletAddr
+            }).on('error', async (error) => {
+                alert("Error: Transaction Failed")
+                // hide pop over
+                this.props.HidePopup()
+            })
+            console.log(result)
+            alert("Pitch Rejected!")
+            
+        }
+
+        // hide pop over
+        this.props.HidePopup()
+        
+        // refresh all pitch list
+
+
+    }
+
+
+    // get admin tipjar amount
+    CheckTipJar = async () => {
+        // show pop over
+        this.props.ShowPopup()
+
+
+        let result = await this.props.ConnectedContract.methods.CheckTipJar()
+        .call({
+            from: this.props.WalletAddr 
+        })
+
+        // store to state
+        this.setState({AdminTipjar: result})
+    
+        // hide pop over
+        this.props.HidePopup()
+    }
+
+
+    // collect platform income from tipjar
+    TouchTipJar = async () => {
+
+        // show pop over
+        this.props.ShowPopup()
+
+        // call contract
+        let result = await this.props.ConnectedContract.methods.TouchTipJar()
+        .send({
+            from: this.props.WalletAddr
+        }).on('error', async (error) => {
+            alert("Error: Transaction Failed")
+            // hide pop over
+            this.props.HidePopup()
+        })
+        console.log(result)
+        alert("Income Collected!")
+
+        // hide pop over
+        this.props.HidePopup()
+    }
+
+
     // admin approve developer's pitch
     RenderAdminHub = () => {
         return(
@@ -397,6 +576,12 @@ export default class UserLibrary extends Component {
                 <Container>
                     <Row>
                         <Col id="col2">
+                            <InputGroup className="mb-3">
+                                <Button variant="success" onClick={this.CheckTipJar}>CheckTipJar</Button>
+                                <FormControl disabled placeholder={this.state.AdminTipjar === null ? null: this.state.AdminTipjar} aria-describedby="basic-addon1"/>
+                            </InputGroup>
+
+                            <Button variant="success" onClick={this.TouchTipJar}>TouchTipJar</Button>
 
                         </Col>
                         <Col id="col2">
@@ -406,20 +591,21 @@ export default class UserLibrary extends Component {
                 </Container>
                 <hr />
 
-                <h4>My Game Pitch</h4>
-                <Table style={{border: "2px solid black"}} variant="light" bordered size="sm" striped hover>
+                <h4>All Game Pitch</h4>
+                <Table style={{border: "2px solid black", marginLeft:"auto", marginRight:"auto"}} variant="danger" bordered size="sm" striped hover>
                     <thead>
                         <tr>
                             <th>Game Name</th>
+                            <th>Developer</th>
                             <th>IPFS URL</th>
-                            <th>Price</th>
+                            <th>Price (GLMR)</th>
                             <th>Approved</th>
                             <th>Rejected</th>
                             <th>Available in Store</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {this.RenderMySubmission()}
+                        {this.state.AdminAllGamePitch === null ? null : this.RenderAllPitch()}
                     </tbody>
                 </Table>
             </div>
@@ -427,56 +613,7 @@ export default class UserLibrary extends Component {
     }
 
 
-    // admin approve or reject pitch
-    ApproveRejectPitch = async (pass) => {
-
-        // show pop over
-        this.props.ShowPopup()
-        if (pass) {
-            
-
-            // call smart contract function
-            // func(string memory name, uint256 price, string memory URI)
-            let result = await this.props.ConnectedContract.methods.SubmitPitch()
-            .send({
-                from: this.props.WalletAddr
-            }).on('error', async (error) => {
-                alert("Error: Transaction Failed")
-                // hide pop over
-                this.props.HidePopup()
-            })
-            console.log(result)
-
-            alert("Submission approved!")
-
-            
-            
-        }else{
-            
-            
-            // call smart contract function
-            // func(string memory name, uint256 price, string memory URI)
-            let result = await this.props.ConnectedContract.methods.SubmitPitch()
-            .send({
-                from: this.props.WalletAddr
-            }).on('error', async (error) => {
-                alert("Error: Transaction Failed")
-                // hide pop over
-                this.props.HidePopup()
-            })
-            console.log(result)
-            
-            
-            
-            alert("Submission approved!")
-            
-        }
-        // hide pop over
-        this.props.HidePopup()
-
-
-    }
-
+    
 
 
 

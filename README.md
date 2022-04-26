@@ -14,12 +14,9 @@
 ## 🧨 Known bug
 - Metamask won't automatically pop up
 - developer submission won't refresh when switched wallet account
-- need to implement IPFS metadata storing
-- nned to implement IPFS image upload
 - need to implement player library
-- need to implement developer revenue claiming function
-- need to implement peer to peer trading component
-
+- need to implement peer to peer page
+- need to implement peer to peer profit sharing function
 
 
 

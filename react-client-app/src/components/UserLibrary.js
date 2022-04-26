@@ -246,7 +246,7 @@ export default class UserLibrary extends Component {
         // live
         if(this.props.UserRole !== "Developer") return
 
-        
+        // the link looks like this
         // ipfs://bafyreihwlk5ab2gbmrxet4oorugopvzowqnf4ulq6ztxqztp74gdlcg6ee/metadata.json
 
         return(
@@ -258,7 +258,6 @@ export default class UserLibrary extends Component {
                         <td>{window.web3.utils.fromWei(x.price)}</td>
                         <td>{x.approved.toString()}</td>
                         <td>{x.rejected.toString()}</td>
-                        <td>false</td>
                     </tr>
                 )
             } )
@@ -372,7 +371,6 @@ export default class UserLibrary extends Component {
                             <th>Price (GLMR)</th>
                             <th>Approved</th>
                             <th>Rejected</th>
-                            <th>Available in Store</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -429,13 +427,7 @@ export default class UserLibrary extends Component {
 
 
 
-
-
-
-
-
-
-
+    // pull all game pitch from contract
     GetAllPitch = async () => {
         // show pop over
         this.props.ShowPopup()
@@ -445,7 +437,6 @@ export default class UserLibrary extends Component {
         .call({
             from: this.props.WalletAddr 
         })
-
         console.log(result)
 
         // store to state
@@ -458,19 +449,21 @@ export default class UserLibrary extends Component {
 
     // render all game pitch for admin
     RenderAllPitch = () => {
+        // check user role
         if(this.props.UserRole !== "Admin") return
 
-
+        // render the table rows
         return(
             this.state.AdminAllGamePitch.map((x, i) => {
                 return(
                     <tr key={i}>
-                        <td>{x.name}</td>
+                        <td><p style={{wordBreak: "break-all"}}>{x.name}</p></td>
+                        <td>{x.publisher}</td>
                         <td><a id="wrapAnchor" href={x.URI} target="_blank" rel="noreferrer">{x.URI}</a></td>
                         <td>{window.web3.utils.fromWei(x.price)}</td>
                         <td>{x.approved.toString()}</td>
                         <td>{x.rejected.toString()}</td>
-                        <td>false</td>
+
                     </tr>
                 )
             } )
@@ -546,6 +539,14 @@ export default class UserLibrary extends Component {
 
     // collect platform income from tipjar
     TouchTipJar = async () => {
+
+        // null check on tipjar
+        if(this.state.AdminTipjar == null || this.state.AdminTipjar === 0 || this.state.AdminTipjar === "0")
+        {
+            alert("Tipjar is empty!")
+            return
+        }
+
 
         // show pop over
         this.props.ShowPopup()

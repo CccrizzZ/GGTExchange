@@ -11,12 +11,13 @@
 
 
     Video game distribution platform and exchange, with NFT game ownership.
-## 🧨 Known bug
+## 🧨 Known bug / TODO
 - Metamask won't automatically pop up
 - developer submission won't refresh when switched wallet account
 - need to implement player library
 - need to implement peer to peer page
-- need to implement peer to peer profit sharing function
+- need to implement peer to peer profit sharing function in smart contract
+- Home component need to have all components rendered
 
 
 
@@ -37,8 +38,11 @@ npm start
 
 
 ### Design graph
-
 ![graph1](https://github.com/CccrizzZ/GGTExchange/blob/main/graph1.png)
+
+### React app class diagram
+![class](https://github.com/CccrizzZ/GGTExchange/blob/main/classdiagram.png)
+
 
 ### Screenshots
 ![sc](https://github.com/CccrizzZ/GGTExchange/blob/main/sc.png)

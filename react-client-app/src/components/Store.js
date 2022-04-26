@@ -20,25 +20,73 @@ export default class Store extends Component {
         
         // wallet address from parent component
         this.state = {
-            ConnectedWalletAddr: props.addr,
-            ConnectedContract: props.contract,
-            RenderCards: props.RenderCards,
-            ShowWaitingPopup: props.ShowPopup,
-            HideWaitingPopup: props.HidePopup
+            AllListings: [],
+
         }
 
     }
 
 
-    // pull listing from server acoording to the account
-    GetMarketListing = () => {
+    async componentDidMount(){
+
+        // look for metamask
+        await this.GetAllListing()
+    }
+
+
+    // pull all listing from contract
+    GetAllListing = async () => {
         
+
+        // show pop over
+        this.props.ShowPopup()
+
+        // call contract
+        let result = await this.props.ConnectedContract.methods.GetAllStoreListing()
+        .call({
+            from: this.props.WalletAddr 
+        })
+        
+        // hide pop over
+        this.props.HidePopup()
+        
+        // store to state
+        this.setState({AllListings: result}) 
 
 
     }
 
 
 
+    RenderStore = () => {
+        if(this.props.UserRole !== "Developer") return
+
+        // the link looks like this
+        // ipfs://bafyreihwlk5ab2gbmrxet4oorugopvzowqnf4ulq6ztxqztp74gdlcg6ee/metadata.json
+
+        return(
+            this.state.DevSubmissionListing.map((x, i) => {
+                return(
+                    <Card style={{ width: '100%' }}>
+                    <Card.Img variant="top" src={x.URI}/>
+                    <Card.Body style={{backgroundColor: '#343a40'}}>
+                        <Card.Title>{x.name}</Card.Title>
+                        <Card.Text>
+                            <hr/>
+                            Description: A game about snake eating each other
+                            <hr/>
+                            Publisher: {x.publisher}
+                            <hr/>
+                            Price: {x.price} Dev
+    
+                        </Card.Text>
+                        <Button variant="primary">Purchase</Button>
+                    </Card.Body>
+                </Card>
+                )
+            } )
+        )
+    }
 
 
     render() {
@@ -47,11 +95,7 @@ export default class Store extends Component {
                 <h2>Store Page</h2>
                 <hr />
                 <div id="griddisplay">
-                    {this.state.RenderCards("http://media.steampowered.com/apps/csgo/blog/images/fb_image.png?v=6")}
-                    {this.state.RenderCards("https://cdn.akamai.steamstatic.com/steam/apps/570/header.jpg?t=1639608963")}
-                    {this.state.RenderCards("https://cdn.akamai.steamstatic.com/steam/apps/1046930/capsule_616x353.jpg?t=1621357797")}
-                    {this.state.RenderCards("https://img.republicworld.com/republic-prod/stories/promolarge/xhdpi/yw9cmbd1dibhnkzv_1644326540.jpeg")}
-
+                    {this.state.AllListings === null ? null : this.RenderStore()}
                 </div>
 
             </div>

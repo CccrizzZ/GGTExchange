@@ -17,8 +17,6 @@
 - need to implement player library
 - need to implement peer to peer page
 - need to implement peer to peer profit sharing function in smart contract
-- Home component need to have all components rendered
-
 
 
 ## 🌌 Deploy smart contract on Moonbeam testnet blockchain
@@ -40,10 +38,12 @@ npm start
 ### Design graph
 ![graph1](https://github.com/CccrizzZ/GGTExchange/blob/main/graph1.png)
 
-### React app class diagram
+### React app component diagram
 ![class](https://github.com/CccrizzZ/GGTExchange/blob/main/classdiagram.png)
 
 
 ### Screenshots
 ![sc](https://github.com/CccrizzZ/GGTExchange/blob/main/sc.png)
+![sc2](https://github.com/CccrizzZ/GGTExchange/blob/main/sc2.png)
+![sc1](https://github.com/CccrizzZ/GGTExchange/blob/main/sc1.png)
 

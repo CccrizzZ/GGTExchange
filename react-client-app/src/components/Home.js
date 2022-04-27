@@ -304,28 +304,6 @@ export default class Home extends Component {
 
 
 
-    // renders single card
-    RenderCards = (img, name, desc, price) => {
-        return(
-            <Card style={{ width: '100%' }}>
-                <Card.Img variant="top" src={img}/>
-                <Card.Body style={{backgroundColor: '#343a40'}}>
-                    <Card.Title>Example Game</Card.Title>
-                    <Card.Text>
-                        <hr/>
-                        Description: A game about snake eating each other
-                        <hr/>
-                        Publisher: {this.state.ConnectedWalletAddr}
-                        <hr/>
-                        Price: 5 Dev
-
-                    </Card.Text>
-                    <Button variant="primary">Purchase</Button>
-                </Card.Body>
-            </Card>
-        )
-    }
-
     // app navigation functions
     GotoLibrary = () => {
         this.setState({ ActivePage: 'library' })

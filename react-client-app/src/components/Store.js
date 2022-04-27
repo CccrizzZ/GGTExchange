@@ -1,18 +1,9 @@
 import React, { Component } from 'react'
 import { 
     Button, 
-    Card, 
-    ListGroup, 
-    InputGroup, 
-    FormControl, 
-    Spinner, 
-    Navbar,
-    Container,
-    ButtonGroup
-
+    Card,
 } from 'react-bootstrap'
 import './Box.css'
-import Web3 from 'web3'
 
 export default class Store extends Component {
     constructor(props) {
@@ -46,7 +37,7 @@ export default class Store extends Component {
         .call({
             from: this.props.WalletAddr 
         })
-        
+        console.log(result)
         // hide pop over
         this.props.HidePopup()
         
@@ -58,14 +49,41 @@ export default class Store extends Component {
 
 
 
+    BuyGame = async (gid, price, e) => {
+        console.log(e)
+
+
+        
+        // show pop over
+        this.props.ShowPopup()
+
+        // call contract
+        let result = await this.props.ConnectedContract.methods.BuyGame(gid)
+        .send({
+            from: this.props.WalletAddr 
+
+            // send token to smart contract
+
+
+
+
+        })
+        console.log(result)
+
+
+        // hide pop over
+        this.props.HidePopup()
+        
+
+
+    }
+
+
+
     RenderStore = () => {
-        if(this.props.UserRole !== "Developer") return
-
-        // the link looks like this
-        // ipfs://bafyreihwlk5ab2gbmrxet4oorugopvzowqnf4ulq6ztxqztp74gdlcg6ee/metadata.json
-
         return(
-            this.state.DevSubmissionListing.map((x, i) => {
+            this.state.AllListings.map((x, i) => {
+                console.log(x.URI)
                 return(
                     <Card style={{ width: '100%' }}>
                     <Card.Img variant="top" src={x.URI}/>
@@ -80,7 +98,7 @@ export default class Store extends Component {
                             Price: {x.price} Dev
     
                         </Card.Text>
-                        <Button variant="primary">Purchase</Button>
+                        <Button id={x.GID} variant="primary" onClick={(e) => this.BuyGame(x.GID, x.price, e)}>Purchase</Button>
                     </Card.Body>
                 </Card>
                 )

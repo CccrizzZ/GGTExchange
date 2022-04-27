@@ -3,7 +3,6 @@ import {
     Button, 
     Card, 
     Modal,
-    ListGroup, 
     InputGroup, 
     FormControl, 
     Container,
@@ -182,7 +181,7 @@ export default class UserLibrary extends Component {
         console.log(metadata)
 
 
-        // call smart contract function
+        // store ipfs link in contract 
         // func(string memory name, uint256 price, string memory URI)
         const result = await this.props.ConnectedContract.methods.SubmitPitch(GameName, GamePrice, metadata.url)
         .send({
@@ -349,7 +348,7 @@ export default class UserLibrary extends Component {
                             />
                             <hr/>
                             <p>Revenue calculated in wei</p>
-                            <p>1 Wei = 1 Eth(10)<sup>-18</sup></p>
+                            <p>1 Wei = 1 GLMR(10)<sup>-18</sup></p>
                         </Col>
                     </Row>
                 </Container>
@@ -461,8 +460,8 @@ export default class UserLibrary extends Component {
                         <td>{x.publisher}</td>
                         <td><a id="wrapAnchor" href={x.URI} target="_blank" rel="noreferrer">{x.URI}</a></td>
                         <td>{window.web3.utils.fromWei(x.price)}</td>
-                        <td>{x.approved.toString()}</td>
-                        <td>{x.rejected.toString()}</td>
+                        <td><Button variant="success" onClick={(e) => this.ApprovePitch(x.publisher, x.GID, e)}>Go</Button></td>
+                        <td><Button variant="danger">Go</Button></td>
 
                     </tr>
                 )
@@ -472,50 +471,67 @@ export default class UserLibrary extends Component {
     }
 
 
-    // approve or reject certain pitch
-    ApproveRejectPitch = async (address, gid, pass) => {
+
+
+    // approve game pitch
+    ApprovePitch = async (address, gid, e) => {
+
+        console.log(address, gid, e)
+
+
 
         // show pop over
         this.props.ShowPopup()
 
-        // approve or reject
-        if (pass) {
-
-            // approve
-            let result = await this.props.ConnectedContract.methods.ApproveGameByDevID(address, gid)
-            .send({
-                from: this.props.WalletAddr
-            }).on('error', async (error) => {
-                alert("Error: Transaction Failed")
-                // hide pop over
-                this.props.HidePopup()
-            })
-            console.log(result)
-            alert("Pitch Approved!")
-            
-        }else{
-            
-            // reject
-            let result = await this.props.ConnectedContract.methods.RejectGameByDevID(address, gid)
-            .send({
-                from: this.props.WalletAddr
-            }).on('error', async (error) => {
-                alert("Error: Transaction Failed")
-                // hide pop over
-                this.props.HidePopup()
-            })
-            console.log(result)
-            alert("Pitch Rejected!")
-            
-        }
+        // approve
+        let result = await this.props.ConnectedContract.methods.ApproveGameByDevID(address, gid)
+        .send({
+            from: this.props.WalletAddr
+        }).on('error', async (error) => {
+            alert("Error: Transaction Failed")
+            // hide pop over
+            this.props.HidePopup()
+        })
+        console.log(result)
+        alert("Pitch Approved!")
+        
 
         // hide pop over
         this.props.HidePopup()
         
         // refresh all pitch list
-
-
+        this.GetAllPitch()    
     }
+
+
+
+
+    // reject game pitch
+    RejectPitch = async (address, gid) => {
+        // show pop over
+        this.props.ShowPopup()
+
+        // reject
+        let result = await this.props.ConnectedContract.methods.RejectGameByDevID(address, gid)
+        .send({
+            from: this.props.WalletAddr
+        }).on('error', async (error) => {
+            alert("Error: Transaction Failed")
+            // hide pop over
+            this.props.HidePopup()
+        })
+        console.log(result)
+
+        alert("Pitch Rejected!")
+        
+        // hide pop over
+        this.props.HidePopup()
+
+        // refresh all pitch list
+        this.GetAllPitch()
+    }
+
+
 
 
     // get admin tipjar amount
@@ -593,6 +609,9 @@ export default class UserLibrary extends Component {
                 <hr />
 
                 <h4>All Game Pitch</h4>
+                <br />
+                <Button id="purplebutton" onClick={this.GetAllPitch}>Refresh</Button>
+                <hr />
                 <Table style={{border: "2px solid black", marginLeft:"auto", marginRight:"auto"}} variant="danger" bordered size="sm" striped hover>
                     <thead>
                         <tr>
@@ -600,9 +619,8 @@ export default class UserLibrary extends Component {
                             <th>Developer</th>
                             <th>IPFS URL</th>
                             <th>Price (GLMR)</th>
-                            <th>Approved</th>
-                            <th>Rejected</th>
-                            <th>Available in Store</th>
+                            <th>Approve</th>
+                            <th>Reject</th>
                         </tr>
                     </thead>
                     <tbody>

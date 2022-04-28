@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { 
     Button, 
     Card,
+    ListGroup,
 } from 'react-bootstrap'
 import './Box.css'
 import axios from 'axios'
@@ -73,7 +74,7 @@ export default class Store extends Component {
         // store to state
         this.setState({AllListings: result}) 
 
-
+        // temp array for data
         let tempArr = []
 
         for (let i = 0; i < this.state.AllListings.length; i++) {
@@ -81,7 +82,15 @@ export default class Store extends Component {
             // send get request to the uri
             await axios.get(this.state.AllListings[i].URI)
             .then((response) => {
-                tempArr.push(response.data.image)
+
+                let obj = {
+                    image: response.data.image,
+                    desc: response.data.description
+                }
+                
+                // push obj into temp array
+                tempArr.push(obj)
+
             })
             .catch((error) => {
                 // handle error
@@ -90,50 +99,49 @@ export default class Store extends Component {
         }
 
         this.setState({ImageArr: tempArr})
-        
     }
 
-    RenderListingImage = async (i) => {
-        return (this.state.ImageArr[i] == null ? "null" : this.state.ImageArr[i])
+
+    // render image for each listing 
+    RenderListingImage = (i) => {
+        return (<img alt="s" src={this.state.ImageArr[i].image} />)
     }
 
+    // render descritions for games
+    GetDescription = (i) => {
+        return (<ListGroup.Item id="darklistgroup">Description: {this.state.ImageArr[i].desc}</ListGroup.Item>)
+    }
 
     // store page
     RenderStore = () => {
-        
-        
         return(
             this.state.AllListings.map((x, i=0) => {
-                console.log(this.state.ImageArr)
-                
                 return(
                     <Card key={i} style={{ width: '100%' }}>
-                        <Card.Img variant="top" src={x.img}/>
+                        {this.state.ImageArr === null ? null : this.RenderListingImage(i) }
                         <Card.Body style={{backgroundColor: '#343a40'}}>
                             <Card.Title>{x.name}</Card.Title>
                             <Card.Text>
-                                <hr/>
-                                Description: A game about snake eating each other
-                                <hr/>
-                                Publisher: {x.publisher}
-                                <hr/>
-                                Price: {window.web3.utils.fromWei(x.price)} Dev
-
+                                <ListGroup style={{marginTop:"20px"}} variant="flush">
+                                    <ListGroup.Item id="darklistgroup">GID: {x.GID}</ListGroup.Item>
+                                    {this.state.ImageArr === null ? null : this.GetDescription(i)}
+                                    <ListGroup.Item id="darklistgroup">Publisher: {x.publisher}</ListGroup.Item>
+                                    <ListGroup.Item id="darklistgroup">Price: {window.web3.utils.fromWei(x.price)} Dev</ListGroup.Item>
+                                </ListGroup>
                             </Card.Text>
                             <Button variant="success" onClick={(e) => this.BuyGame(x.GID, x.price, e)}>Purchase</Button>
                         </Card.Body>
                     </Card>
                 )
-                
-
             } )
         )
+
     }
 
 
     render() {
         return (
-            <div id="modulebox">
+            <div id="modulebox" style={{minHeight: '80vh'}}>
                 <h2>Store Page</h2>
                 <hr />
                 <div id="griddisplay">

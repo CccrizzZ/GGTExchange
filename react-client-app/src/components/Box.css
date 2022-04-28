@@ -81,3 +81,8 @@
     -webkit-hyphens: auto;
     hyphens: auto;
 }
+
+#darklistgroup {
+    background: rgba(33, 33, 33, 0.8);
+    color: #fff
+}

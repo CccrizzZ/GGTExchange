@@ -1,3 +1,4 @@
+![icon](https://github.com/CccrizzZ/GGTExchange/blob/main/ggicon.png)
 # GGTExchange
 
 ![Polkadot](https://img.shields.io/badge/polkadot-E6007A?style=for-the-badge&logo=polkadot&logoColor=white)
@@ -11,6 +12,7 @@
 
 
     Video game distribution platform and exchange, with NFT game ownership.
+
 ## 🧨 Known bug / TODO
 - Metamask won't automatically pop up
 - developer submission won't refresh when switched wallet account
@@ -43,6 +45,9 @@ npm start
 
 ### Screenshots
 ![sc](https://github.com/CccrizzZ/GGTExchange/blob/main/sc.png)
-![sc2](https://github.com/CccrizzZ/GGTExchange/blob/main/sc2.png)
 ![sc1](https://github.com/CccrizzZ/GGTExchange/blob/main/sc1.png)
+![sc2](https://github.com/CccrizzZ/GGTExchange/blob/main/sc2.png)
+![sc3](https://github.com/CccrizzZ/GGTExchange/blob/main/sc3.png)
+![sc4](https://github.com/CccrizzZ/GGTExchange/blob/main/sc4.png)
+
 

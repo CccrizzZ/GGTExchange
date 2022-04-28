@@ -9,8 +9,8 @@ import {
     Row,
     Col,
     Table,
-    Form
-
+    Form,
+    ListGroup
 } from 'react-bootstrap'
 import './Box.css'
 import RetroHitCounter from 'react-retro-hit-counter';
@@ -42,7 +42,8 @@ export default class UserLibrary extends Component {
         this.GameDescInput = React.createRef()
         this.GamePicsInput = React.createRef()
         this.GamePriceInput = React.createRef()
-        
+        this.AdminSetRoleAddr = React.createRef()
+        this.AdminSetRoleNumber = React.createRef()
     }
     
     
@@ -53,6 +54,7 @@ export default class UserLibrary extends Component {
         switch (this.props.UserRole) {
             case 'Developer':
                 console.log("Developer init")
+                await this.GetUnclaimedIncomeAmount()
                 await this.GetMySubmission()
                 break;
             case 'Guest':
@@ -120,9 +122,8 @@ export default class UserLibrary extends Component {
         console.log(TokenIDArray)
 
 
-        // get all token metadata
-        let temp = []
-
+        // temp array for data
+        let tempArr = []
 
         // loop user owned token array
         for (let i = 0; i < TokenIDArray.length; i++) {
@@ -136,24 +137,31 @@ export default class UserLibrary extends Component {
             // send get request to the uri
             axios.get(URI)
             .then((response) => {
+                
+                // construct new data obj
+                let obj = {
+                    name: response.data.name,
+                    image: response.data.image,
+                    desc: response.data.description
+                }
 
+                // push it into temp array
+                tempArr.push(obj)
 
-
-                // handle success
-                console.log(response.data)
             })
             .catch((error) => {
                 // handle error
                 console.log(error)
             })
+
         }
 
-
+        console.log(tempArr)
 
     
 
         // store player library in state
-        this.setState({ PlayerLibrary: temp })
+        this.setState({ PlayerLibrary: tempArr })
 
         // hide pop over
         this.props.HidePopup()
@@ -304,6 +312,7 @@ export default class UserLibrary extends Component {
 
     // render developer submission table
     RenderMySubmission = () => {
+
         // gname
         // uri
         // price
@@ -377,6 +386,54 @@ export default class UserLibrary extends Component {
     }
 
 
+
+    RenderRevenueCounter = (i) => {
+        
+        if (i = 0) {
+            return(
+                <RetroHitCounter
+                    hits={0}
+                    withBorder={true}
+                    withGlow={true}
+                    minLength={19}
+                    size={25}
+                    padding={4}
+                    digitSpacing={3}
+                    segmentThickness={4}
+                    segmentSpacing={0.5}
+                    segmentActiveColor="#76FF03"
+                    segmentInactiveColor="#315324"
+                    backgroundColor="#222222"
+                    borderThickness={7}
+                    glowStrength={0.5}
+                    glowSize={4}
+                />
+            )
+        }else{
+            return(
+                <RetroHitCounter
+                    hits={this.state.UnclaimedRevenue==null ? 0 : this.state.UnclaimedRevenue}
+                    withBorder={true}
+                    withGlow={true}
+                    minLength={19}
+                    size={25}
+                    padding={4}
+                    digitSpacing={3}
+                    segmentThickness={4}
+                    segmentSpacing={0.5}
+                    segmentActiveColor="#76FF03"
+                    segmentInactiveColor="#315324"
+                    backgroundColor="#222222"
+                    borderThickness={7}
+                    glowStrength={0.5}
+                    glowSize={4}
+                />
+            )
+
+        }
+
+    }
+
     // developers submit their games here for admin to review
     RenderDeveloperMintShop = () => {
         return(
@@ -390,7 +447,7 @@ export default class UserLibrary extends Component {
                             <hr/>
                             <Button id="purplebutton" onClick={this.ShowGameSubmitModal}>Submit New Game</Button>
                             <br/>
-                            <Button id="purplebutton" onClick={this.ClaimIncome}>Claim Sales </Button>
+                            <Button id="purplebutton" onClick={this.ClaimIncome}>Claim Sales Revenue</Button>
                         </Col>
                         <Col id="col2">
                             <h4>Unclaimed Sales Revenue</h4>
@@ -420,7 +477,6 @@ export default class UserLibrary extends Component {
                     </Row>
                 </Container>
                 <hr/>
-                
 
 
 
@@ -455,6 +511,7 @@ export default class UserLibrary extends Component {
                 >
                     <Modal.Header>
                         <Modal.Title>💾 Submit Pitch</Modal.Title>
+                        
                     </Modal.Header>
                     <Modal.Body>
                         <Form>
@@ -467,7 +524,9 @@ export default class UserLibrary extends Component {
                                 <Form.Control ref={this.GameDescInput} placeholder="Enter your game description" as="textarea" rows={3} />
                             </Form.Group>
                             <Form.Group className="mb-3">
-                                <Form.Label>📂 Demo Pictures (a single picture that contains everything)</Form.Label>
+                                <img style={{maxWidth:"80px"}} src="https://raw.githubusercontent.com/github/explore/80688e429a7d4ef2fca1e82350fe8e3517d3494d/topics/ipfs/ipfs.png" alt="ipfs"/>
+                                <br/>
+                                <Form.Label> Demo Pictures (one single picture)</Form.Label>
                                 <Form.Control ref={this.GamePicsInput} type="file" size="sm" />
                             </Form.Group>
                             <Form.Group className="mb-3">
@@ -651,6 +710,39 @@ export default class UserLibrary extends Component {
     }
 
 
+    // set role for certain user
+    SetUserRole = async () => {
+        // 0 = guest
+        // 1 = player
+        // 2 = developer
+        // 3 = admin
+
+        console.log(this.AdminSetRoleAddr.current.value)
+        console.log(this.AdminSetRoleNumber.current.value)
+
+
+        // show pop over
+        this.props.ShowPopup()
+
+        // call contract
+        let result = await this.props.ConnectedContract.methods.SetRole(this.AdminSetRoleAddr.current.value, this.AdminSetRoleNumber.current.value)
+        .send({
+            from: this.props.WalletAddr
+        }).on('error', async (error) => {
+            alert("Error: Transaction Failed")
+            // hide pop over
+            this.props.HidePopup()
+        })
+        console.log(result)
+        alert("Role set success!")
+
+        // hide pop over
+        this.props.HidePopup()
+
+
+    }
+
+
     // admin approve developer's pitch
     RenderAdminHub = () => {
         return(
@@ -669,6 +761,17 @@ export default class UserLibrary extends Component {
 
                         </Col>
                         <Col id="col2">
+                            <ListGroup style={{margin: "auto", marginBottom: "20px", width: '40%'}} variant="flush">
+                                <ListGroup.Item variant="dark">0 = Guest</ListGroup.Item>
+                                <ListGroup.Item variant="primary">1 = Player</ListGroup.Item>
+                                <ListGroup.Item variant="warning">2 = Developer</ListGroup.Item>
+                                <ListGroup.Item variant="danger">3 = Admin</ListGroup.Item>
+                            </ListGroup>
+                            <InputGroup className="mb-3">
+                                <Button variant="success" onClick={this.SetUserRole}>SetRole</Button>
+                                <FormControl ref={this.AdminSetRoleAddr} placeholder="Address" aria-describedby="basic-addon1"/>
+                                <FormControl ref={this.AdminSetRoleNumber} placeholder="Role" aria-describedby="basic-addon1"/>
+                            </InputGroup>
 
                         </Col>
                     </Row>
@@ -678,7 +781,9 @@ export default class UserLibrary extends Component {
                 <h4>All Game Pitch</h4>
                 <br />
                 <Button id="purplebutton" onClick={this.GetAllPitch}>Refresh</Button>
-                <hr />
+                <br />
+                <br />
+                <br />
                 <Table style={{border: "2px solid black", marginLeft:"auto", marginRight:"auto"}} variant="danger" bordered size="sm" striped hover>
                     <thead>
                         <tr>

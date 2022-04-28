@@ -406,7 +406,7 @@ export default class Home extends Component {
 
     render() {
         return (
-            <div style={{ display: "block", backgroundImage: `url(${bg})`, height: "auto", color: "#fff" }}>
+            <div style={{ display: "block", backgroundImage: `url(${bg})`, height: "auto", color: "#fff", backgroundSize: "100%" }}>
                 
                 {/* navbar */}
                 <Navbar bg="dark" variant="dark">

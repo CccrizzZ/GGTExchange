@@ -117,7 +117,7 @@ export default class Store extends Component {
         return(
             this.state.AllListings.map((x, i=0) => {
                 return(
-                    <Card key={i} style={{ width: '100%' }}>
+                    <Card key={i} style={{ width: '100%', height: "fit-content"}}>
                         {this.state.ImageArr === null ? null : this.RenderListingImage(i) }
                         <Card.Body style={{backgroundColor: '#343a40'}}>
                             <Card.Title>{x.name}</Card.Title>

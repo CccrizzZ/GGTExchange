@@ -35,6 +35,8 @@ export default class UserLibrary extends Component {
             AdminTipjar: null,
             AdminAllGamePitch: null,
             PlayerLibrary: null,
+            TargetPlayerLibrary: null,
+            TargetPlayerLibraryArray: null
         }
 
         // refs
@@ -44,6 +46,10 @@ export default class UserLibrary extends Component {
         this.GamePriceInput = React.createRef()
         this.AdminSetRoleAddr = React.createRef()
         this.AdminSetRoleNumber = React.createRef()
+        this.AdminGetUserLibAddr = React.createRef()
+
+
+
     }
     
     
@@ -61,7 +67,7 @@ export default class UserLibrary extends Component {
                 console.log("Guest init")
                 break;
             case 'Player':
-                this.GetPlayerLibrary()
+                await this.GetPlayerLibrary()
                 console.log("Player init")
                 break;
             case 'Admin':
@@ -135,7 +141,7 @@ export default class UserLibrary extends Component {
 
             
             // send get request to the uri
-            axios.get(URI)
+            await axios.get(URI)
             .then((response) => {
                 
                 // construct new data obj
@@ -163,49 +169,50 @@ export default class UserLibrary extends Component {
         // store player library in state
         this.setState({ PlayerLibrary: tempArr })
 
+
         // hide pop over
         this.props.HidePopup()
-
-    
+        
+        
     }
     
 
-
-    RenderPlayerLibrary = () => {
-        this.state.AllListings.map((x, i) => {
-            return(
-                <Card key={i} style={{ width: '100%' }}>
-                    <Card.Img variant="top" src={x.URI}/>
-                    <Card.Body style={{backgroundColor: '#343a40'}}>
-                        <Card.Title>{x.name}</Card.Title>
-                        <Card.Text>
-                            <hr/>
-                            Description: A game about snake eating each other
-                            <hr/>
-                            Publisher: {x.publisher}
-                            <hr/>
-                            Price: {x.price} Dev
     
-                        </Card.Text>
-                        <Button id={x.GID} variant="primary" onClick={(e) => this.BuyGame(x.GID, x.price, e)}>Purchase</Button>
-                    </Card.Body>
-                </Card>
-            )
-        } )
-    
+    RenderPlayerLibraryCard = () => {
+        return(
+            this.state.PlayerLibrary.map((x, i=0) => {
+                return(
+                    <Card key={i} style={{ width: '100%', height: "fit-content"}}>
+                        <Card.Img variant="top" src={x.image}/>
+                        <Card.Body style={{backgroundColor: '#343a40'}}>
+                            <Card.Title>{x.name}</Card.Title>
+                            <Card.Text>
+                                <hr/>
+                                Description: {x.desc}
+                                <hr/>
+                            </Card.Text>
+                            <Button variant="primary" onClick={this.VerifyGameOwnerShip}>Play</Button>
+                        </Card.Body>
+                    </Card>
+                )
+            } )
+        )
     }
+
 
     // player library
     RenderPlayerLibrary = () => {
-
-
         return(
             <div id="modulebox">
                 <h2>My Library</h2>
                 <hr />
 
-                <div id="griddisplay">
-                    {this.PlayerLibrary == null ? null : this.RenderPlayerLibrary}
+
+                <Button id="purplebutton" onClick={this.GetPlayerLibrary}>Refresh</Button>
+
+                <div id="griddisplay" style={{ minHeight: "80vh", height: "100%", marginTop: "20px"}}>
+                    {this.state.PlayerLibrary ? this.RenderPlayerLibraryCard() : null}
+
                 </div>
 
             </div>
@@ -386,54 +393,6 @@ export default class UserLibrary extends Component {
     }
 
 
-
-    RenderRevenueCounter = (i) => {
-        
-        if (i = 0) {
-            return(
-                <RetroHitCounter
-                    hits={0}
-                    withBorder={true}
-                    withGlow={true}
-                    minLength={19}
-                    size={25}
-                    padding={4}
-                    digitSpacing={3}
-                    segmentThickness={4}
-                    segmentSpacing={0.5}
-                    segmentActiveColor="#76FF03"
-                    segmentInactiveColor="#315324"
-                    backgroundColor="#222222"
-                    borderThickness={7}
-                    glowStrength={0.5}
-                    glowSize={4}
-                />
-            )
-        }else{
-            return(
-                <RetroHitCounter
-                    hits={this.state.UnclaimedRevenue==null ? 0 : this.state.UnclaimedRevenue}
-                    withBorder={true}
-                    withGlow={true}
-                    minLength={19}
-                    size={25}
-                    padding={4}
-                    digitSpacing={3}
-                    segmentThickness={4}
-                    segmentSpacing={0.5}
-                    segmentActiveColor="#76FF03"
-                    segmentInactiveColor="#315324"
-                    backgroundColor="#222222"
-                    borderThickness={7}
-                    glowStrength={0.5}
-                    glowSize={4}
-                />
-            )
-
-        }
-
-    }
-
     // developers submit their games here for admin to review
     RenderDeveloperMintShop = () => {
         return(
@@ -454,7 +413,7 @@ export default class UserLibrary extends Component {
                             <hr/>
 
                             <RetroHitCounter
-                                hits={this.state.UnclaimedRevenue==null ? 0 : this.state.UnclaimedRevenue}
+                                hits={this.state.UnclaimedRevenue == null ? 0 : this.state.UnclaimedRevenue}
                                 withBorder={true}
                                 withGlow={true}
                                 minLength={19}
@@ -743,22 +702,134 @@ export default class UserLibrary extends Component {
     }
 
 
+    // get certain players library
+    GetTargetPlayerLibrary = async () => {
+    
+        if(this.AdminGetUserLibAddr.current.value.length < 1) {
+            alert("Please enter the user address")
+            return
+        }
+
+        // show pop over
+        this.props.ShowPopup()
+
+        console.log(this.AdminGetUserLibAddr.current.value)
+
+        // get user owned token id array
+        let result = await this.props.ConnectedContract.methods.GetPlayerLibrary(this.AdminGetUserLibAddr.current.value)
+        .call({
+            from: this.props.WalletAddr 
+        })
+        console.log(result)
+
+        // store to state
+        this.setState({ TargetPlayerLibrary: result })
+
+
+        // array for storing data
+        let tempArr = []
+
+        // loop user owned token array
+        for (let i = 0; i < this.state.TargetPlayerLibrary.length; i++) {
+
+            let URI = await this.props.ConnectedContract.methods.tokenURI(window.web3.utils.toBN(this.state.TargetPlayerLibrary[i]))
+            .call({
+                from: this.props.WalletAddr 
+            })
+
+            
+            // send get request to the uri
+            axios.get(URI)
+            .then((response) => {
+                
+                // construct new data obj
+                let obj = {
+                    name: response.data.name,
+                    image: response.data.image,
+                    desc: response.data.description
+                }
+
+                // push it into temp array
+                tempArr.push(obj)
+
+            })
+            .catch((error) => {
+                // handle error
+                console.log(error)
+            })
+
+        }
+        
+        console.log(tempArr)
+
+        // store data to state
+        this.setState({ TargetPlayerLibraryArray: tempArr })
+
+        
+
+    
+        // hide pop over
+        this.props.HidePopup()
+    }
+
+
+    
+    RenderTargetUserLib = () => {
+        // check user role
+        if(this.props.UserRole !== "Admin") return
+
+        // render the table rows
+        return(
+            this.state.TargetPlayerLibraryArray.map((x, i=0) => {
+                return(
+                    <tr key={i}>
+                        <td><p style={{wordBreak: "break-all"}}>{x.name}</p></td>
+                        <td>{x.desc}</td>
+                        <td><a id="wrapAnchor" href={x.image} target="_blank" rel="noreferrer">IPFS URL</a></td>
+                    </tr>
+                )
+            } )
+        )
+    }
+
+
     // admin approve developer's pitch
     RenderAdminHub = () => {
         return(
             <div id="modulebox">
                 <h2>Admin Hub</h2>
                 <hr />
+                {/* control panel */}
                 <Container>
                     <Row>
                         <Col id="col2">
                             <InputGroup className="mb-3">
-                                <Button variant="success" onClick={this.CheckTipJar}>CheckTipJar</Button>
-                                <FormControl disabled placeholder={this.state.AdminTipjar === null ? null: this.state.AdminTipjar} aria-describedby="basic-addon1"/>
+                                <Button onClick={this.CheckTipJar}>CheckTipJar</Button>
+                                <FormControl disabled placeholder={this.state.AdminTipjar === null ? null: this.state.AdminTipjar}/>
                             </InputGroup>
-
-                            <Button variant="success" onClick={this.TouchTipJar}>TouchTipJar</Button>
-
+                            <Button variant="danger" onClick={this.TouchTipJar}>TouchTipJar</Button>
+                            <hr/>
+                            <InputGroup className="mb-3">
+                                <Button onClick={this.GetTargetPlayerLibrary}>GetUserLibrary</Button>
+                                <FormControl ref={this.AdminGetUserLibAddr} placeholder="TargetUserWalletAddress" />
+                            </InputGroup>
+                            <Table style={{border: "2px solid black", marginLeft:"auto", marginRight:"auto"}} variant="success" bordered size="sm" striped hover>
+                                <thead>
+                                    <tr>
+                                        <th>Game Name</th>
+                                        <th>Developer</th>
+                                        <th>IPFS URL</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><p style={{wordBreak: "break-all"}}>Example Game</p></td>
+                                        <td>example description</td>
+                                        <td><a id="wrapAnchor" href={"example"} target="_blank" rel="noreferrer">ExampleImage</a></td>
+                                    </tr>
+                                    {this.state.TargetPlayerLibraryArray === null ? null : this.RenderTargetUserLib()}
+                                </tbody>
+                            </Table>
                         </Col>
                         <Col id="col2">
                             <ListGroup style={{margin: "auto", marginBottom: "20px", width: '40%'}} variant="flush">
@@ -768,7 +839,7 @@ export default class UserLibrary extends Component {
                                 <ListGroup.Item variant="danger">3 = Admin</ListGroup.Item>
                             </ListGroup>
                             <InputGroup className="mb-3">
-                                <Button variant="success" onClick={this.SetUserRole}>SetRole</Button>
+                                <Button onClick={this.SetUserRole}>SetRole</Button>
                                 <FormControl ref={this.AdminSetRoleAddr} placeholder="Address" aria-describedby="basic-addon1"/>
                                 <FormControl ref={this.AdminSetRoleNumber} placeholder="Role" aria-describedby="basic-addon1"/>
                             </InputGroup>
@@ -778,6 +849,7 @@ export default class UserLibrary extends Component {
                 </Container>
                 <hr />
 
+                {/* all submitted game pitch */}
                 <h4>All Game Pitch</h4>
                 <br />
                 <Button id="purplebutton" onClick={this.GetAllPitch}>Refresh</Button>

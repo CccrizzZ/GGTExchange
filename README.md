@@ -1,6 +1,6 @@
-![icon](https://github.com/CccrizzZ/GGTExchange/blob/main/ggicon.png)
-# GGTExchange
 
+# GGTExchange
+![icon](https://github.com/CccrizzZ/GGTExchange/blob/main/ggicon1.png)
 ![Polkadot](https://img.shields.io/badge/polkadot-E6007A?style=for-the-badge&logo=polkadot&logoColor=white)
 ![Solidity](https://img.shields.io/badge/Solidity-%23363636.svg?style=for-the-badge&logo=solidity&logoColor=white)
 ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)

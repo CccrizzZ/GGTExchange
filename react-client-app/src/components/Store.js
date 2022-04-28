@@ -4,6 +4,8 @@ import {
     Card,
 } from 'react-bootstrap'
 import './Box.css'
+import axios from 'axios'
+
 
 export default class Store extends Component {
     constructor(props) {
@@ -11,8 +13,8 @@ export default class Store extends Component {
         
         // wallet address from parent component
         this.state = {
-            AllListings: [],
-
+            AllListings: null,
+            ImageArr: null,
         }
 
     }
@@ -20,10 +22,37 @@ export default class Store extends Component {
 
     async componentDidMount(){
 
-        // look for metamask
+        // get all store listings
         await this.GetAllListing()
     }
 
+    // playe buy game from store
+    BuyGame = async (gid, price, e) => {
+
+        
+        console.log(gid, price)
+
+        // show pop over
+        this.props.ShowPopup()
+
+        // call contract
+        let result = await this.props.ConnectedContract.methods.BuyGame(gid)
+        .send({
+            from: this.props.WalletAddr,
+
+            // send token to smart contract
+            value: price
+        }).on('error', async (error) => {
+            alert("Error: Transaction Failed")
+            this.props.HidePopup()
+        })
+        console.log(result)
+
+        alert("Transaction Success!")
+
+        // hide pop over
+        this.props.HidePopup()
+    }
 
     // pull all listing from contract
     GetAllListing = async () => {
@@ -37,7 +66,7 @@ export default class Store extends Component {
         .call({
             from: this.props.WalletAddr 
         })
-        console.log(result)
+        console.log("All listing from blockchain: \n" + result)
         // hide pop over
         this.props.HidePopup()
         
@@ -45,63 +74,58 @@ export default class Store extends Component {
         this.setState({AllListings: result}) 
 
 
+        let tempArr = []
+
+        for (let i = 0; i < this.state.AllListings.length; i++) {
+
+            // send get request to the uri
+            await axios.get(this.state.AllListings[i].URI)
+            .then((response) => {
+                tempArr.push(response.data.image)
+            })
+            .catch((error) => {
+                // handle error
+                console.log(error)
+            })    
+        }
+
+        this.setState({ImageArr: tempArr})
+        
+    }
+
+    RenderListingImage = async (i) => {
+        return (this.state.ImageArr[i] == null ? "null" : this.state.ImageArr[i])
     }
 
 
-
-    BuyGame = async (gid, price, e) => {
-        console.log(e)
-
-
-        
-        // show pop over
-        this.props.ShowPopup()
-
-        // call contract
-        let result = await this.props.ConnectedContract.methods.BuyGame(gid)
-        .send({
-            from: this.props.WalletAddr 
-
-            // send token to smart contract
-
-
-
-
-        })
-        console.log(result)
-
-
-        // hide pop over
-        this.props.HidePopup()
-        
-
-
-    }
-
-
-
+    // store page
     RenderStore = () => {
+        
+        
         return(
-            this.state.AllListings.map((x, i) => {
-                console.log(x.URI)
+            this.state.AllListings.map((x, i=0) => {
+                console.log(this.state.ImageArr)
+                
                 return(
-                    <Card style={{ width: '100%' }}>
-                    <Card.Img variant="top" src={x.URI}/>
-                    <Card.Body style={{backgroundColor: '#343a40'}}>
-                        <Card.Title>{x.name}</Card.Title>
-                        <Card.Text>
-                            <hr/>
-                            Description: A game about snake eating each other
-                            <hr/>
-                            Publisher: {x.publisher}
-                            <hr/>
-                            Price: {x.price} Dev
-    
-                        </Card.Text>
-                        <Button id={x.GID} variant="primary" onClick={(e) => this.BuyGame(x.GID, x.price, e)}>Purchase</Button>
-                    </Card.Body>
-                </Card>
+                    <Card key={i} style={{ width: '100%' }}>
+                        <Card.Img variant="top" src={x.img}/>
+                        <Card.Body style={{backgroundColor: '#343a40'}}>
+                            <Card.Title>{x.name}</Card.Title>
+                            <Card.Text>
+                                <hr/>
+                                Description: A game about snake eating each other
+                                <hr/>
+                                Publisher: {x.publisher}
+                                <hr/>
+                                Price: {window.web3.utils.fromWei(x.price)} Dev
+
+                            </Card.Text>
+                            <Button variant="success" onClick={(e) => this.BuyGame(x.GID, x.price, e)}>Purchase</Button>
+                        </Card.Body>
+                    </Card>
                 )
+                
+
             } )
         )
     }

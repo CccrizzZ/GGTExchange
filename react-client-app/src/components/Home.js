@@ -78,7 +78,6 @@ export default class Home extends Component {
             
             // null check on contract
             if(!contract) { alert("Contract Not Found"); return }
-            console.log(contract)
 
             // store wallet address
             console.log(provider.selectedAddress)
@@ -181,7 +180,7 @@ export default class Home extends Component {
         alert("You have set your name to " + this.state.UserDisplayName)
     }
 
-
+    
 
     // register guest user to player
     RegisterAsPlayer = async () => {
@@ -266,6 +265,7 @@ export default class Home extends Component {
             case 'store':
                 return (
                     <Store 
+                        IsConnected={this.IsWalletConnected}
                         WalletAddr={this.state.ConnectedWalletAddr} 
                         ConnectedContract={this.state.ConnectedContract} 
                         RenderCards={this.RenderCards}
@@ -276,6 +276,7 @@ export default class Home extends Component {
             case 'library':
                 return (
                     <UserLibrary 
+                        IsConnected={this.IsWalletConnected}
                         WalletAddr={this.state.ConnectedWalletAddr} 
                         ConnectedContract={this.state.ConnectedContract} 
                         UserRole={this.state.UserRole} 
@@ -287,6 +288,7 @@ export default class Home extends Component {
             case 'p2p':
                 return(
                     <P2PMarketplace 
+                        IsConnected={this.IsWalletConnected}
                         WalletAddr={this.state.ConnectedWalletAddr} 
                         ConnectedContract={this.state.ConnectedContract} 
                         RenderCards={this.RenderCards}
@@ -301,7 +303,15 @@ export default class Home extends Component {
 
     }
 
-
+    // determine if wallet is connected
+    IsWalletConnected = () => {
+        if(this.state.ConnectedWalletAddr == null) {
+            return false
+        }else {
+            return true
+        }
+    }
+    
 
 
     // app navigation functions

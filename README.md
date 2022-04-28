@@ -14,7 +14,6 @@
 ## 🧨 Known bug / TODO
 - Metamask won't automatically pop up
 - developer submission won't refresh when switched wallet account
-- need to implement player library
 - need to implement peer to peer page
 - need to implement peer to peer profit sharing function in smart contract
 

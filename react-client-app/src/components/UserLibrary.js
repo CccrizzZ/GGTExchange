@@ -14,8 +14,11 @@ import {
 } from 'react-bootstrap'
 import './Box.css'
 import RetroHitCounter from 'react-retro-hit-counter';
+import axios from 'axios'
 import { NFTStorage } from 'nft.storage'
 const client = new NFTStorage({ token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweEUzNzczNjBEYTFBRDlmZkU3ZDg1QjcyQTZBMjk1NEUyN0UzZTI3MDgiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTY1MDgzMjE2MDIwOSwibmFtZSI6IkRldmVsb3BtZW50LWtleSJ9.fBVoPVoh1z3j6OnPmpzTcjFp-o6QibxhCM_-En31IvI' })
+
+
 
 export default class UserLibrary extends Component {
     constructor(props) {
@@ -30,7 +33,8 @@ export default class UserLibrary extends Component {
             MyIncome: null,
             AdminAllSubmissionListing: null,
             AdminTipjar: null,
-            AdminAllGamePitch: null
+            AdminAllGamePitch: null,
+            PlayerLibrary: null,
         }
 
         // refs
@@ -55,6 +59,7 @@ export default class UserLibrary extends Component {
                 console.log("Guest init")
                 break;
             case 'Player':
+                this.GetPlayerLibrary()
                 console.log("Player init")
                 break;
             case 'Admin':
@@ -72,9 +77,16 @@ export default class UserLibrary extends Component {
 
     // verify ownership with smart contract
     // called when starting game
-    VerifyGameOwnerShip = () => {
+    VerifyGameOwnerShip = async (tokenID) => {
 
-        // pull from smart contract
+        // call smart contract
+        let owner = await this.props.ConnectedContract.methods.ownerOf(tokenID)
+        .call({
+            from: this.props.WalletAddr 
+        })
+
+        // return if owner equals to connected wallet
+        return (owner === this.props.WalletAddr)
 
     }
 
@@ -93,32 +105,90 @@ export default class UserLibrary extends Component {
     
     
     
-    
-    RenderPlayerLibraryCard = (img) => {
-        return(
-            <Card style={{ width: '100%' }}>
-                <Card.Img variant="top" src={img}/>
-                <Card.Body style={{backgroundColor: '#343a40'}}>
-                    <Card.Title>Example Game</Card.Title>
-                    <Card.Text>
-                        <hr/>
-                        Description: A game about snake eating each other
-                        <hr/>
-                        Publisher: {this.props.WalletAddr}
-                        <hr/>
-                        Price: 5 Dev
+    GetPlayerLibrary = async () => {
+        // check wallet connection
+        if(!this.props.IsConnected()) return
 
-                    </Card.Text>
-                    <Button variant="success">Play</Button>
-                </Card.Body>
-            </Card>
-        )
+        // show pop over
+        this.props.ShowPopup()
+
+        // call smart contract
+        let TokenIDArray = await this.props.ConnectedContract.methods.GetMyLibrary()
+        .call({
+            from: this.props.WalletAddr 
+        })
+        console.log(TokenIDArray)
+
+
+        // get all token metadata
+        let temp = []
+
+
+        // loop user owned token array
+        for (let i = 0; i < TokenIDArray.length; i++) {
+            let URI = await this.props.ConnectedContract.methods.tokenURI(TokenIDArray[i])
+            .call({
+                from: this.props.WalletAddr 
+            })
+            console.log(URI)
+
+            
+            // send get request to the uri
+            axios.get(URI)
+            .then((response) => {
+
+
+
+                // handle success
+                console.log(response.data)
+            })
+            .catch((error) => {
+                // handle error
+                console.log(error)
+            })
+        }
+
+
+
+    
+
+        // store player library in state
+        this.setState({ PlayerLibrary: temp })
+
+        // hide pop over
+        this.props.HidePopup()
+
+    
     }
     
+
+
+    RenderPlayerLibrary = () => {
+        this.state.AllListings.map((x, i) => {
+            return(
+                <Card key={i} style={{ width: '100%' }}>
+                    <Card.Img variant="top" src={x.URI}/>
+                    <Card.Body style={{backgroundColor: '#343a40'}}>
+                        <Card.Title>{x.name}</Card.Title>
+                        <Card.Text>
+                            <hr/>
+                            Description: A game about snake eating each other
+                            <hr/>
+                            Publisher: {x.publisher}
+                            <hr/>
+                            Price: {x.price} Dev
+    
+                        </Card.Text>
+                        <Button id={x.GID} variant="primary" onClick={(e) => this.BuyGame(x.GID, x.price, e)}>Purchase</Button>
+                    </Card.Body>
+                </Card>
+            )
+        } )
+    
+    }
+
     // player library
     RenderPlayerLibrary = () => {
-
-        // pull from smart contract
 
 
         return(
@@ -127,6 +197,7 @@ export default class UserLibrary extends Component {
                 <hr />
 
                 <div id="griddisplay">
+                    {this.PlayerLibrary == null ? null : this.RenderPlayerLibrary}
                 </div>
 
             </div>
@@ -208,11 +279,7 @@ export default class UserLibrary extends Component {
     GetMySubmission = async () => {
 
         // check wallet connection
-        if(this.props.WalletAddr === "" || this.props.WalletAddr === null){
-            alert("Wallet not connected")
-            return
-        }
-
+        if(!this.props.IsConnected()) return
         
         // show pop over
         this.props.ShowPopup()
@@ -461,7 +528,7 @@ export default class UserLibrary extends Component {
                         <td><a id="wrapAnchor" href={x.URI} target="_blank" rel="noreferrer">{x.URI}</a></td>
                         <td>{window.web3.utils.fromWei(x.price)}</td>
                         <td><Button variant="success" onClick={(e) => this.ApprovePitch(x.publisher, x.GID, e)}>Go</Button></td>
-                        <td><Button variant="danger">Go</Button></td>
+                        <td><Button variant="danger" onClick={(e) => this.RejectPitch(x.publisher, x.GID, e)}>Go</Button></td>
 
                     </tr>
                 )
@@ -484,7 +551,7 @@ export default class UserLibrary extends Component {
         this.props.ShowPopup()
 
         // approve
-        let result = await this.props.ConnectedContract.methods.ApproveGameByDevID(address, gid)
+        let result = await this.props.ConnectedContract.methods.ApproveGameByDevID(address, gid-1)
         .send({
             from: this.props.WalletAddr
         }).on('error', async (error) => {

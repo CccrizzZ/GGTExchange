@@ -1,0 +1,27 @@
+{
+  "files": {
+    "main.css": "/GGTExchange/static/css/main.23cf7058.chunk.css",
+    "main.js": "/GGTExchange/static/js/main.4ca09a4b.chunk.js",
+    "main.js.map": "/GGTExchange/static/js/main.4ca09a4b.chunk.js.map",
+    "runtime-main.js": "/GGTExchange/static/js/runtime-main.5884066d.js",
+    "runtime-main.js.map": "/GGTExchange/static/js/runtime-main.5884066d.js.map",
+    "static/css/2.0a9ec390.chunk.css": "/GGTExchange/static/css/2.0a9ec390.chunk.css",
+    "static/js/2.fcbc050d.chunk.js": "/GGTExchange/static/js/2.fcbc050d.chunk.js",
+    "static/js/2.fcbc050d.chunk.js.map": "/GGTExchange/static/js/2.fcbc050d.chunk.js.map",
+    "static/js/3.80960d84.chunk.js": "/GGTExchange/static/js/3.80960d84.chunk.js",
+    "static/js/3.80960d84.chunk.js.map": "/GGTExchange/static/js/3.80960d84.chunk.js.map",
+    "index.html": "/GGTExchange/index.html",
+    "static/css/2.0a9ec390.chunk.css.map": "/GGTExchange/static/css/2.0a9ec390.chunk.css.map",
+    "static/css/main.23cf7058.chunk.css.map": "/GGTExchange/static/css/main.23cf7058.chunk.css.map",
+    "static/js/2.fcbc050d.chunk.js.LICENSE.txt": "/GGTExchange/static/js/2.fcbc050d.chunk.js.LICENSE.txt",
+    "static/media/bg.c7a91897.jpg": "/GGTExchange/static/media/bg.c7a91897.jpg",
+    "static/media/ggicon1.73d9ed06.png": "/GGTExchange/static/media/ggicon1.73d9ed06.png"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.5884066d.js",
+    "static/css/2.0a9ec390.chunk.css",
+    "static/js/2.fcbc050d.chunk.js",
+    "static/css/main.23cf7058.chunk.css",
+    "static/js/main.4ca09a4b.chunk.js"
+  ]
+}
